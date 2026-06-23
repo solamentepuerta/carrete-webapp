@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
+import { CelebrationBurst } from "@/components/CelebrationBurst";
+import { StreakBadge } from "@/components/StreakBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories, type Category } from "@/lib/categories";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
@@ -55,6 +57,8 @@ function getDateForTimezone(timezone: string) {
 }
 
 export default async function HomePage() {
+  let celebrationKey = "sin-fecha";
+  let dayComplete = false;
   let streak = 0;
   let dayStatus = emptyStatus;
   let boardCards: BoardCard[] = categories.map((category) => ({
@@ -111,6 +115,12 @@ export default async function HomePage() {
 
     dayStatus = (status as DayStatus | null) ?? emptyStatus;
     streak = Number(streakData ?? 0);
+    celebrationKey = today;
+    dayComplete =
+      dayStatus.my_uploads === 5 &&
+      dayStatus.partner_uploads === 5 &&
+      dayStatus.my_guesses === 5 &&
+      dayStatus.partner_guesses === 5;
     boardCards = categories.map((category) => {
       const entry = ownEntries.find((item) => item.category_id === category.id);
 
@@ -154,16 +164,14 @@ export default async function HomePage() {
                 El corcho de hoy
               </h1>
             </div>
-            <div className="streak-card pixel-card px-3 py-2">
-              <p className="text-center text-xs font-semibold uppercase tracking-wide text-ink/60">
-                Racha
-              </p>
-              <p className="text-center font-hand text-4xl leading-none text-blush-deep">
-                {streak}
-              </p>
-            </div>
+            <StreakBadge isCelebrating={dayComplete} value={streak} />
           </div>
         </header>
+
+        <CelebrationBurst
+          celebrationKey={`home-${celebrationKey}-${streak}`}
+          enabled={dayComplete}
+        />
 
         <section className="window-shell p-3">
           <div className="corkboard grid grid-cols-2 gap-3 rounded-2xl p-3">

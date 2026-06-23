@@ -4,6 +4,7 @@ import imageCompression from "browser-image-compression";
 import { motion } from "framer-motion";
 import { ChangeEvent, type CSSProperties, useMemo, useState } from "react";
 import { categories } from "@/lib/categories";
+import { firePastelConfetti, playSoftChime } from "@/lib/celebrations";
 import { createClient } from "@/lib/supabase/client";
 
 type ProfileForUpload = {
@@ -55,7 +56,12 @@ export function UploadForm({ profile }: { profile: ProfileForUpload }) {
       return;
     }
 
+    const completedBefore = Object.values(uploads).filter(
+      (upload) => upload.status === "done"
+    ).length;
+    const wasAlreadyDone = uploads[categoryId]?.status === "done";
     const previewUrl = URL.createObjectURL(file);
+
     setUploads((current) => ({
       ...current,
       [categoryId]: {
@@ -112,6 +118,10 @@ export function UploadForm({ profile }: { profile: ProfileForUpload }) {
           status: "done"
         }
       }));
+      playSoftChime();
+      firePastelConfetti(
+        !wasAlreadyDone && completedBefore === 4 ? "big" : "soft"
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "No se pudo subir la foto.";

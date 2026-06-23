@@ -93,6 +93,16 @@ Esta fase implementa calendario e historial:
 
 Ejecuta `supabase/migrations/202606230003_phase_6_calendar.sql` para crear la RPC mensual.
 
+## Fase 7
+
+Esta fase añade pulido de experiencia:
+
+- Confeti pastel al completar subidas, revelar resultados perfectos y volver al corcho completo.
+- Chime suave en acciones iniciadas por la persona usuaria, como subir y revelar.
+- Racha animada en el corcho de hoy.
+- Score visible después del flip de adivinanzas.
+- Micro-interacciones y estados vacíos más cálidos.
+
 ## Comandos
 
 ```bash

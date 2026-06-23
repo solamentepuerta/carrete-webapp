@@ -11,8 +11,10 @@ import {
   useSensors
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
 import { type CSSProperties, useMemo, useState } from "react";
 import { categories, type Category } from "@/lib/categories";
+import { firePastelConfetti, playSoftChime } from "@/lib/celebrations";
 import { createClient } from "@/lib/supabase/client";
 
 export type GuessEntry = {
@@ -79,6 +81,7 @@ export function GuessBoard({
     () => new Set(Object.values(assignments).filter(Boolean)),
     [assignments]
   );
+  const score = results.filter((result) => result.is_correct).length;
   const canReveal =
     entries.length === 5 &&
     entries.every((entry) => assignments[entry.entry_id]) &&
@@ -159,15 +162,17 @@ export function GuessBoard({
       }
 
       const resultRows = data as DayResultRow[];
+      const nextResults = resultRows.map((result) => ({
+        entry_id: result.entry_id,
+        guessed_category_id: result.guessed_category_id,
+        is_correct: result.is_correct,
+        real_category_id: result.real_category_id
+      }));
+      const correctCount = nextResults.filter((result) => result.is_correct).length;
 
-      setResults(
-        resultRows.map((result) => ({
-          entry_id: result.entry_id,
-          guessed_category_id: result.guessed_category_id,
-          is_correct: result.is_correct,
-          real_category_id: result.real_category_id
-        }))
-      );
+      setResults(nextResults);
+      playSoftChime();
+      firePastelConfetti(correctCount === 5 ? "big" : "soft");
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "No se pudo revelar."
@@ -179,9 +184,14 @@ export function GuessBoard({
 
   if (entries.length === 0) {
     return (
-      <div className="window-shell p-6 text-center">
-        <p className="font-hand text-4xl text-lavender-deep">Adivinar</p>
-        <p className="mt-2 font-bold">Todavía no hay fotos para esta fecha.</p>
+      <div className="window-shell empty-state">
+        <p className="empty-sticker" aria-hidden="true">
+          ♡
+        </p>
+        <p className="font-hand text-4xl text-lavender-deep">Nada por aquí</p>
+        <p className="mt-2 font-bold">
+          Cuando tu pareja suba sus 5 fotos, este corcho se llena.
+        </p>
       </div>
     );
   }
@@ -210,6 +220,18 @@ export function GuessBoard({
             />
           ))}
         </div>
+
+        {results.length > 0 ? (
+          <motion.div
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="result-summary"
+            initial={{ opacity: 0, scale: 0.94, y: 10 }}
+            transition={{ damping: 13, stiffness: 160, type: "spring" }}
+          >
+            <span>Resultado</span>
+            <strong>{score}/5</strong>
+          </motion.div>
+        ) : null}
 
         {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
 

@@ -265,6 +265,19 @@ button {
   place-items: center;
 }
 
+.streak-number-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+}
+
+.streak-flame {
+  display: inline-block;
+  font-size: 1rem;
+  filter: drop-shadow(0 2px 0 rgb(51 47 63 / 0.12));
+}
+
 .corkboard {
   min-height: 24rem;
   border: 3px solid var(--theme-line);
@@ -281,6 +294,9 @@ button {
   border-radius: 0.95rem;
   background: var(--theme-cream);
   box-shadow: 8px 8px 0 rgb(51 47 63 / 0.14);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .polaroid:nth-child(5) {
@@ -361,6 +377,11 @@ button {
 .soft-button:active {
   transform: translateY(3px);
   box-shadow: 0 4px 0 rgb(51 47 63 / 0.14);
+}
+
+.soft-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
 }
 
 .status-violet {
@@ -453,6 +474,9 @@ button {
   background: var(--theme-cream);
   padding: 0.75rem 0.75rem 1.35rem;
   box-shadow: 8px 8px 0 rgb(51 47 63 / 0.14);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .upload-preview {
@@ -606,11 +630,52 @@ button {
   color: var(--theme-ink);
   font-weight: 800;
   touch-action: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
 }
 
 .category-chip:disabled {
   cursor: not-allowed;
   opacity: 0.48;
+}
+
+.result-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-sage);
+  padding: 0.85rem 1rem;
+  box-shadow: 6px 6px 0 rgb(51 47 63 / 0.12);
+  font-weight: 800;
+}
+
+.result-summary strong {
+  font-family: var(--font-hand);
+  color: var(--theme-blush-deep);
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.empty-state {
+  padding: 2rem 1.4rem;
+  text-align: center;
+}
+
+.empty-sticker {
+  display: grid;
+  height: 4.2rem;
+  width: 4.2rem;
+  place-items: center;
+  margin: 0 auto 0.75rem;
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-lilac-soft);
+  box-shadow: 6px 6px 0 rgb(51 47 63 / 0.12);
+  font-size: 2rem;
 }
 
 .calendar-shell {
@@ -667,6 +732,10 @@ button {
   border-radius: 0.85rem;
   padding: 0.32rem;
   box-shadow: 3px 3px 0 rgb(51 47 63 / 0.1);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
 }
 
 .calendar-day-muted {
@@ -727,6 +796,9 @@ button {
   background: var(--theme-cream);
   padding: 0.55rem 0.55rem 0.85rem;
   box-shadow: 6px 6px 0 rgb(51 47 63 / 0.12);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .read-polaroid-empty {
@@ -772,4 +844,21 @@ button {
   background: var(--theme-lilac-soft);
   padding: 1.5rem;
   text-align: center;
+}
+
+@media (hover: hover) {
+  .theme-toggle:hover,
+  .soft-button:hover,
+  .calendar-nav-button:hover,
+  .category-chip:not(:disabled):hover {
+    transform: translateY(-2px);
+  }
+
+  .polaroid:hover,
+  .upload-polaroid:hover,
+  .read-polaroid:hover,
+  .calendar-day:hover {
+    transform: translateY(-3px);
+    box-shadow: 10px 10px 0 rgb(51 47 63 / 0.13);
+  }
 }
