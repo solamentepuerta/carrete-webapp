@@ -81,6 +81,18 @@ Esta fase implementa `/adivinar`:
 
 Ejecuta `supabase/migrations/202606230002_phase_5_results_gate.sql` para endurecer `get_day_results` antes de probar el revelado.
 
+## Fase 6
+
+Esta fase implementa calendario e historial:
+
+- `/calendario` muestra vista mensual con indicadores completo, a medias o vacío.
+- La RPC `get_calendar_month` devuelve solo conteos por día, nunca categorías reales.
+- `/dia/[fecha]` muestra el día en modo lectura con tus etiquetas propias y las etiquetas de la pareja solo cuando `get_day_results` ya puede revelar.
+
+### Actualizar Supabase para Fase 6
+
+Ejecuta `supabase/migrations/202606230003_phase_6_calendar.sql` para crear la RPC mensual.
+
 ## Comandos
 
 ```bash

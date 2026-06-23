@@ -612,3 +612,164 @@ button {
   cursor: not-allowed;
   opacity: 0.48;
 }
+
+.calendar-shell {
+  padding: 1rem;
+}
+
+.calendar-nav {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr 2.75rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.calendar-nav h2 {
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+
+.calendar-nav-button {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 3px solid var(--theme-line);
+  border-radius: 0.9rem;
+  background: var(--theme-lilac-soft);
+  box-shadow: 4px 4px 0 rgb(51 47 63 / 0.12);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.calendar-weekdays {
+  margin-bottom: 0.5rem;
+  color: var(--theme-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.calendar-day {
+  display: grid;
+  aspect-ratio: 1;
+  min-width: 0;
+  align-content: space-between;
+  border: 2px solid var(--theme-line);
+  border-radius: 0.85rem;
+  padding: 0.32rem;
+  box-shadow: 3px 3px 0 rgb(51 47 63 / 0.1);
+}
+
+.calendar-day-muted {
+  opacity: 0.42;
+}
+
+.calendar-day-complete {
+  background: var(--theme-sage);
+}
+
+.calendar-day-partial {
+  background: var(--theme-blush);
+}
+
+.calendar-day-empty {
+  background: var(--theme-cloud);
+}
+
+.calendar-day-today {
+  outline: 3px solid var(--theme-blush-deep);
+  outline-offset: 2px;
+}
+
+.calendar-date {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.calendar-marker {
+  justify-self: end;
+  font-size: 0.84rem;
+  line-height: 1;
+}
+
+.day-read-shell {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.section-title {
+  font-family: var(--font-hand);
+  color: var(--theme-lavender-deep);
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.read-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.read-polaroid {
+  rotate: var(--rotate);
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-cream);
+  padding: 0.55rem 0.55rem 0.85rem;
+  box-shadow: 6px 6px 0 rgb(51 47 63 / 0.12);
+}
+
+.read-polaroid-empty {
+  opacity: 0.58;
+}
+
+.read-photo {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 2px solid var(--theme-line);
+  border-radius: 0.75rem;
+  background-position: center;
+  background-size: cover;
+}
+
+.read-caption {
+  min-height: 4.8rem;
+  padding-top: 0.7rem;
+  text-align: center;
+}
+
+.read-result {
+  margin-top: 0.65rem;
+  border: 2px solid var(--theme-line);
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.read-result-correct {
+  background: var(--theme-sage);
+}
+
+.read-result-miss {
+  background: var(--theme-blush);
+}
+
+.locked-panel {
+  border: 3px dashed var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-lilac-soft);
+  padding: 1.5rem;
+  text-align: center;
+}
