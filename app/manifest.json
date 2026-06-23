@@ -3,10 +3,6 @@
   "short_name": "Carrete",
   "description": "Un ritual diario de polaroids para dos.",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#F7E4EF",
-  "theme_color": "#CDB4FF",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -20,5 +16,9 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "theme_color": "#CDB4FF",
+  "background_color": "#F7E4EF",
+  "display": "standalone",
+  "orientation": "portrait"
 }

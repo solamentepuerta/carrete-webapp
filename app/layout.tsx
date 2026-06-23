@@ -9,15 +9,19 @@ export const metadata: Metadata = {
   description:
     "Un ritual diario en polaroids para dos personas: subir, adivinar y revelar.",
   applicationName: "Carrete",
-  manifest: "/manifest.webmanifest",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Carrete"
   },
   icons: {
-    icon: "/icons/icon.svg",
-    apple: "/icons/icon.svg"
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon0.svg", type: "image/svg+xml" },
+      { url: "/icon1.png", sizes: "96x96", type: "image/png" }
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }]
   }
 };
 
