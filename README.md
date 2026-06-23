@@ -29,8 +29,7 @@ Esta fase deja lista la base de Supabase:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
 La app no usa zona horaria global. Cada perfil guarda `profiles.timezone`, y las entradas deben crearse con la RPC `create_entry` para calcular `entry_date` en el servidor según el dia local del autor.
@@ -117,6 +116,23 @@ pnpm build
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
+
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` tambien funciona como alias de compatibilidad si tu proyecto todavía usa el nombre anterior.
+
+## Checklist Vercel + Supabase
+
+En Vercel agrega estas variables en Production, Preview y Development si quieres probar previews:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+En Supabase, antes de probar el flujo completo:
+
+1. Ejecuta `supabase/schema.sql` completo si el proyecto esta vacio.
+2. Si ya habias corrido una fase anterior, ejecuta las migraciones pendientes en orden.
+3. Activa **Authentication > Sign In / Providers > Anonymous sign-ins**.
+4. Confirma que el bucket privado `photos` existe.
