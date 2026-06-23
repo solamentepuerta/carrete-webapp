@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories } from "@/lib/categories";
@@ -64,21 +65,21 @@ export default function HomePage() {
                   } as CSSProperties
                 }
               >
-                <div className="polaroid-photo relative h-full rounded-xl">
+                <div className="polaroid-photo relative h-full overflow-hidden rounded-xl">
+                  <Image
+                    alt=""
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 480px) 45vw, 190px"
+                    src={category.imageSrc}
+                  />
                   <span className="washi-tape" aria-hidden="true" />
                   <span className="corner-sparkle" aria-hidden="true">
                     ✧
                   </span>
-                  <div className="flex h-full items-center justify-center px-3 text-center">
-                    <div>
-                      <p className="text-3xl" aria-hidden="true">
-                        {category.emoji}
-                      </p>
-                      <p className="mt-2 text-sm font-semibold leading-snug">
-                        {category.label}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="category-card-label px-3 text-center text-base font-bold leading-snug">
+                    {category.label}
+                  </p>
                 </div>
               </article>
             ))}
