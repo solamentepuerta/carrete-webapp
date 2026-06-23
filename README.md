@@ -35,6 +35,20 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 La app no usa zona horaria global. Cada perfil guarda `profiles.timezone`, y las entradas deben crearse con la RPC `create_entry` para calcular `entry_date` en el servidor según el dia local del autor.
 
+## Fase 2
+
+Esta fase implementa el acceso MVP:
+
+- `/login` entra con nombre y código compartido de pareja.
+- El cliente crea una sesión anónima de Supabase cuando todavía no hay usuario.
+- La RPC `join_couple` crea o encuentra la pareja por `invite_code` y asocia `profiles.timezone` con la zona horaria del dispositivo.
+
+### Actualizar Supabase para Fase 2
+
+1. En Supabase Auth, activa **Anonymous sign-ins**.
+2. Ejecuta `supabase/migrations/202606230001_phase_2_access.sql` en el SQL editor si ya habías corrido Fase 1.
+3. Si estás creando el proyecto desde cero, puedes ejecutar `supabase/schema.sql` completo.
+
 ## Comandos
 
 ```bash

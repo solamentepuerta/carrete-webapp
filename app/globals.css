@@ -373,3 +373,41 @@ button {
 .status-mint {
   background: var(--theme-sage);
 }
+
+.auth-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.auth-field {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 800;
+}
+
+.auth-field input {
+  width: 100%;
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-card);
+  padding: 0.85rem 1rem;
+  color: var(--theme-ink);
+  font-weight: 700;
+  outline: none;
+  box-shadow: 0 5px 0 rgb(51 47 63 / 0.12);
+}
+
+.auth-field input:focus {
+  border-color: var(--theme-lavender-deep);
+}
+
+.auth-error {
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-blush);
+  padding: 0.75rem 1rem;
+  color: var(--theme-ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+}

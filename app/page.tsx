@@ -1,8 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories } from "@/lib/categories";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 const navItems = [
   { href: "/subir", label: "Subir" },
@@ -11,7 +16,28 @@ const navItems = [
   { href: "/ajustes", label: "Ajustes" }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  if (hasSupabaseEnv()) {
+    const supabase = await createClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect("/login");
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      redirect("/login");
+    }
+  }
+
   return (
     <main className="min-h-dvh overflow-hidden px-4 py-5 text-ink">
       <div className="kawaii-sky" aria-hidden="true">

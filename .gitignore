@@ -27,5 +27,9 @@ pnpm-debug.log*
 # vercel
 .vercel
 
+# local agent skill cache
+.agents/
+skills-lock.json
+
 # typescript
 *.tsbuildinfo
