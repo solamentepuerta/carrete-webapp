@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Carrete</title>
+  <desc id="desc">Icono pastel de una polaroid con un corazon.</desc>
+  <rect width="512" height="512" rx="116" fill="#FBF7F0"/>
+  <path fill="#E6DCFB" d="M94 112c0-26 21-47 47-47h230c26 0 47 21 47 47v288c0 26-21 47-47 47H141c-26 0-47-21-47-47V112Z"/>
+  <path fill="#FFFDF8" d="M130 126c0-17 14-31 31-31h190c17 0 31 14 31 31v259c0 17-14 31-31 31H161c-17 0-31-14-31-31V126Z"/>
+  <path fill="#C7DAC4" d="M160 133h192v185H160V133Z"/>
+  <path fill="#C9B6F2" d="M160 132h192v73c-23-19-54-25-84-12-42 18-69 4-108-20v-41Z"/>
+  <path fill="#F7D6E0" d="M224 236c0-23 28-34 44-17 16-17 44-6 44 17 0 31-44 55-44 55s-44-24-44-55Z"/>
+  <path fill="#4A4458" fill-opacity=".72" d="M185 354h142c8 0 14 6 14 14s-6 14-14 14H185c-8 0-14-6-14-14s6-14 14-14Z"/>
+</svg>
