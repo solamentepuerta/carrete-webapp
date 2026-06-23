@@ -295,8 +295,13 @@ button {
     linear-gradient(90deg, var(--theme-photo-grid) 1px, transparent 1px),
     linear-gradient(var(--theme-photo-grid) 1px, transparent 1px),
     var(--theme-lilac-soft);
+  background-position: center;
   background-size: 16px 16px;
   color: var(--theme-ink);
+}
+
+.polaroid-photo-real {
+  background-size: cover;
 }
 
 .washi-tape {

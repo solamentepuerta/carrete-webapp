@@ -59,6 +59,15 @@ Esta fase implementa `/subir`:
 - Upload al bucket privado `photos`.
 - Creación de entrada mediante la RPC `create_entry`; el cliente no inserta directamente en `entries`.
 
+## Fase 4
+
+Esta fase conecta el corcho de `/`:
+
+- Redirige a `/login` si no existe sesión/perfil.
+- Lee solo tus propias entradas de `entries` para mostrar tus 5 polaroids del día.
+- Genera signed URLs de Storage desde el servidor para fotos privadas.
+- Muestra `get_day_status` y `get_streak`.
+
 ## Comandos
 
 ```bash
