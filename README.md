@@ -68,6 +68,19 @@ Esta fase conecta el corcho de `/`:
 - Genera signed URLs de Storage desde el servidor para fotos privadas.
 - Muestra `get_day_status` y `get_streak`.
 
+## Fase 5
+
+Esta fase implementa `/adivinar`:
+
+- Carga fotos de la pareja con `get_entries_to_guess`, sin exponer la categoría real.
+- Usa `@dnd-kit/core` con sensores Pointer y Touch.
+- Envía cada intento con `submit_guess`.
+- Revela con flip 3D llamando `get_day_results` solo cuando ya existen las 5 adivinanzas.
+
+### Actualizar Supabase para Fase 5
+
+Ejecuta `supabase/migrations/202606230002_phase_5_results_gate.sql` para endurecer `get_day_results` antes de probar el revelado.
+
 ## Comandos
 
 ```bash

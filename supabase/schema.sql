@@ -261,7 +261,21 @@ as $$
   join guesses g on g.entry_id = e.id and g.guesser_id = auth.uid()
   where e.couple_id = my_couple_id()
     and e.author_id <> auth.uid()
-    and e.entry_date = p_date;
+    and e.entry_date = p_date
+    and (
+      select count(*) from entries e2
+      where e2.couple_id = my_couple_id()
+        and e2.author_id <> auth.uid()
+        and e2.entry_date = p_date
+    ) = 5
+    and (
+      select count(*) from guesses g2
+      join entries e2 on e2.id = g2.entry_id
+      where g2.guesser_id = auth.uid()
+        and e2.couple_id = my_couple_id()
+        and e2.author_id <> auth.uid()
+        and e2.entry_date = p_date
+    ) = 5;
 $$;
 
 create or replace function get_day_status(p_date date)
