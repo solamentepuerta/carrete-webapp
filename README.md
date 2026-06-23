@@ -49,6 +49,16 @@ Esta fase implementa el acceso MVP:
 2. Ejecuta `supabase/migrations/202606230001_phase_2_access.sql` en el SQL editor si ya habías corrido Fase 1.
 3. Si estás creando el proyecto desde cero, puedes ejecutar `supabase/schema.sql` completo.
 
+## Fase 3
+
+Esta fase implementa `/subir`:
+
+- Captura desde cámara/galería con `accept="image/*"` y `capture="environment"`.
+- Compresión en cliente con `browser-image-compression`.
+- Una polaroid por categoría, con revelado visual después de elegir foto.
+- Upload al bucket privado `photos`.
+- Creación de entrada mediante la RPC `create_entry`; el cliente no inserta directamente en `entries`.
+
 ## Comandos
 
 ```bash

@@ -411,3 +411,102 @@ button {
   font-size: 0.9rem;
   font-weight: 700;
 }
+
+.upload-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.upload-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 800;
+}
+
+.upload-progress strong {
+  color: var(--theme-blush-deep);
+  font-family: var(--font-hand);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.upload-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.upload-card {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.upload-polaroid {
+  rotate: var(--rotate);
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-cream);
+  padding: 0.75rem 0.75rem 1.35rem;
+  box-shadow: 8px 8px 0 rgb(51 47 63 / 0.14);
+}
+
+.upload-preview {
+  position: relative;
+  display: grid;
+  min-height: 17rem;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid var(--theme-line);
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(90deg, var(--theme-photo-grid) 1px, transparent 1px),
+    linear-gradient(var(--theme-photo-grid) 1px, transparent 1px),
+    var(--theme-lilac-soft);
+  background-position: center;
+  background-size:
+    16px 16px,
+    16px 16px,
+    cover;
+}
+
+.upload-preview-filled {
+  background-size: cover;
+}
+
+.upload-reveal {
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  background-position: center;
+  background-size: cover;
+}
+
+.upload-empty {
+  font-size: 3rem;
+}
+
+.upload-label {
+  margin-top: 0.9rem;
+  text-align: center;
+  font-weight: 800;
+}
+
+.upload-action {
+  cursor: pointer;
+  position: relative;
+}
+
+.upload-action input {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.upload-note {
+  text-align: center;
+  color: var(--theme-lavender-deep);
+  font-weight: 800;
+}
