@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories } from "@/lib/categories";
 
 const navItems = [
@@ -12,23 +13,46 @@ const navItems = [
 export default function HomePage() {
   return (
     <main className="min-h-dvh overflow-hidden px-4 py-5 text-ink">
+      <div className="kawaii-sky" aria-hidden="true">
+        <span className="sparkle sparkle-one">✦</span>
+        <span className="sparkle sparkle-two">♡</span>
+        <span className="sparkle sparkle-three">✧</span>
+      </div>
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-md flex-col gap-5">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-hand text-3xl text-lavender-deep">Carrete</p>
-            <h1 className="mt-1 text-2xl font-bold leading-tight">
-              El corcho de hoy
-            </h1>
-          </div>
-          <div className="rounded-2xl bg-cream/80 px-3 py-2 text-right shadow-soft">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink/60">
-              Racha
+        <header className="window-shell">
+          <div className="window-bar">
+            <div className="flex items-center gap-1.5" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.28em]">
+              day dreams
             </p>
-            <p className="font-hand text-3xl leading-none text-blush-deep">0</p>
+            <ThemeToggle />
+          </div>
+
+          <div className="flex items-start justify-between gap-4 p-4">
+            <div>
+              <p className="font-hand text-5xl leading-none text-lavender-deep">
+                Carrete
+              </p>
+              <h1 className="mt-1 text-2xl font-bold leading-tight">
+                El corcho de hoy
+              </h1>
+            </div>
+            <div className="pixel-card px-3 py-2 text-right">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink/60">
+                Racha
+              </p>
+              <p className="font-hand text-4xl leading-none text-blush-deep">
+                0
+              </p>
+            </div>
           </div>
         </header>
 
-        <section className="rounded-2xl border border-white/80 bg-cream/75 p-3 shadow-soft">
+        <section className="window-shell p-3">
           <div className="corkboard grid grid-cols-2 gap-3 rounded-2xl p-3">
             {categories.map((category, index) => (
               <article
@@ -40,8 +64,11 @@ export default function HomePage() {
                   } as CSSProperties
                 }
               >
-                <div className="relative h-full rounded-xl bg-lilac-soft/70">
+                <div className="polaroid-photo relative h-full rounded-xl">
                   <span className="washi-tape" aria-hidden="true" />
+                  <span className="corner-sparkle" aria-hidden="true">
+                    ✧
+                  </span>
                   <div className="flex h-full items-center justify-center px-3 text-center">
                     <div>
                       <p className="text-3xl" aria-hidden="true">
@@ -59,10 +86,10 @@ export default function HomePage() {
         </section>
 
         <section className="grid grid-cols-2 gap-3">
-          <StatusCard label="Tus fotos" value="0/5" tone="lavender" />
-          <StatusCard label="Sus fotos" value="0/5" tone="sage" />
-          <StatusCard label="Tus pistas" value="0/5" tone="blush" />
-          <StatusCard label="Sus pistas" value="0/5" tone="cream" />
+          <StatusCard label="Tus fotos" value="0/5" tone="violet" />
+          <StatusCard label="Sus fotos" value="0/5" tone="cloud" />
+          <StatusCard label="Tus pistas" value="0/5" tone="pink" />
+          <StatusCard label="Sus pistas" value="0/5" tone="mint" />
         </section>
 
         <nav className="mt-auto grid grid-cols-2 gap-3 pb-1">
@@ -84,17 +111,17 @@ function StatusCard({
 }: {
   label: string;
   value: string;
-  tone: "lavender" | "sage" | "blush" | "cream";
+  tone: "violet" | "cloud" | "pink" | "mint";
 }) {
   const toneClass = {
-    lavender: "bg-lilac-soft",
-    sage: "bg-sage",
-    blush: "bg-blush",
-    cream: "bg-cream"
+    violet: "status-violet",
+    cloud: "status-cloud",
+    pink: "status-pink",
+    mint: "status-mint"
   }[tone];
 
   return (
-    <div className={`${toneClass} rounded-2xl px-4 py-3 shadow-soft`}>
+    <div className={`${toneClass} pixel-card px-4 py-3`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-ink/60">
         {label}
       </p>

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FBF7F0",
+  themeColor: "#F7E4EF",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1
@@ -34,8 +34,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body>{children}</body>
+    <html lang="es" suppressHydrationWarning>
+      <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(()=>{try{const saved=localStorage.getItem("carrete-theme");const system=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=saved||system;}catch{document.documentElement.dataset.theme="light";}})();'
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
