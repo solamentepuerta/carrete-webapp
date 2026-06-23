@@ -299,14 +299,6 @@ button {
   color: var(--theme-ink);
 }
 
-.polaroid-photo::after {
-  position: absolute;
-  inset: auto 0 0;
-  height: 42%;
-  background: linear-gradient(transparent, rgb(0 0 0 / 0.38));
-  content: "";
-}
-
 .washi-tape {
   position: absolute;
   top: -0.8rem;
