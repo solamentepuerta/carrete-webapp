@@ -29,7 +29,10 @@ export function ThemeToggle() {
       }
       type="button"
     >
-      <span aria-hidden="true">{theme === "dark" ? "☾" : "☼"}</span>
+      <span
+        aria-hidden="true"
+        className={`theme-toggle-icon theme-toggle-icon-${theme}`}
+      />
     </button>
   );
 }

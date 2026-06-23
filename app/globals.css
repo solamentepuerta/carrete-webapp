@@ -206,6 +206,65 @@ button {
   box-shadow: 0 2px 0 rgb(51 47 63 / 0.14);
 }
 
+.theme-toggle-icon {
+  position: relative;
+  display: block;
+  height: 1.05rem;
+  width: 1.05rem;
+}
+
+.theme-toggle-icon-light::before {
+  position: absolute;
+  inset: 0.2rem;
+  border: 2px solid var(--theme-line);
+  border-radius: 999px;
+  background: var(--theme-lavender);
+  content: "";
+}
+
+.theme-toggle-icon-light::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  box-shadow:
+    0 -0.44rem 0 -0.22rem var(--theme-line),
+    0 0.44rem 0 -0.22rem var(--theme-line),
+    -0.44rem 0 0 -0.22rem var(--theme-line),
+    0.44rem 0 0 -0.22rem var(--theme-line),
+    -0.31rem -0.31rem 0 -0.22rem var(--theme-line),
+    0.31rem -0.31rem 0 -0.22rem var(--theme-line),
+    -0.31rem 0.31rem 0 -0.22rem var(--theme-line),
+    0.31rem 0.31rem 0 -0.22rem var(--theme-line);
+  content: "";
+}
+
+.theme-toggle-icon-dark::before {
+  position: absolute;
+  inset: 0.08rem;
+  border: 2px solid var(--theme-line);
+  border-radius: 999px;
+  background: var(--theme-lavender);
+  content: "";
+}
+
+.theme-toggle-icon-dark::after {
+  position: absolute;
+  top: -0.02rem;
+  right: -0.02rem;
+  height: 0.86rem;
+  width: 0.86rem;
+  border-radius: 999px;
+  background: var(--theme-cream);
+  content: "";
+}
+
+.streak-card {
+  display: grid;
+  min-height: 5.6rem;
+  min-width: 5.6rem;
+  place-items: center;
+}
+
 .corkboard {
   min-height: 24rem;
   border: 3px solid var(--theme-line);

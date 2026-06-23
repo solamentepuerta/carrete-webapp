@@ -42,11 +42,11 @@ export default function HomePage() {
                 El corcho de hoy
               </h1>
             </div>
-            <div className="pixel-card px-3 py-2 text-right">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink/60">
+            <div className="streak-card pixel-card px-3 py-2">
+              <p className="text-center text-xs font-semibold uppercase tracking-wide text-ink/60">
                 Racha
               </p>
-              <p className="font-hand text-4xl leading-none text-blush-deep">
+              <p className="text-center font-hand text-4xl leading-none text-blush-deep">
                 0
               </p>
             </div>
