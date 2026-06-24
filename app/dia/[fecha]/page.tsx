@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import type { CSSProperties } from "react";
+import { DayPhotoCard } from "./DayPhotoCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories, type Category } from "@/lib/categories";
 import { formatLongDate, isIsoDate } from "@/lib/dates";
@@ -33,6 +33,13 @@ type DayResultRow = {
   real_category_id: number;
 };
 
+type EntryToGuessRow = {
+  already_guessed: boolean;
+  entry_id: string;
+  guessed_category_id: number | null;
+  image_path: string;
+};
+
 type ReadCard = {
   caption?: string | null;
   category: Category;
@@ -40,6 +47,14 @@ type ReadCard = {
   imageSrc: string;
   isEmpty?: boolean;
   resultTone?: "correct" | "miss";
+};
+
+/** Pre-processed partner card for unrevealed entries (no category_id exposed). */
+type UnrevealedPartnerCard = {
+  categoryEmoji: string;
+  categoryLabel: string;
+  entryId: string;
+  imageSrc: string;
 };
 
 const emptyStatus: DayStatus = {
@@ -101,18 +116,24 @@ export default async function DayPage({
     redirect("/login");
   }
 
-  const [{ data: ownEntriesData }, { data: statusData }, { data: resultData }] =
-    await Promise.all([
-      supabase
-        .from("entries")
-        .select("id,category_id,image_path,caption")
-        .eq("author_id", user.id)
-        .eq("entry_date", fecha),
-      supabase.rpc("get_day_status", { p_date: fecha }).maybeSingle(),
-      supabase.rpc("get_day_results", { p_date: fecha })
-    ]);
+  const [
+    { data: ownEntriesData },
+    { data: statusData },
+    { data: resultData },
+    { data: entriesToGuessData }
+  ] = await Promise.all([
+    supabase
+      .from("entries")
+      .select("id,category_id,image_path,caption")
+      .eq("author_id", user.id)
+      .eq("entry_date", fecha),
+    supabase.rpc("get_day_status", { p_date: fecha }).maybeSingle(),
+    supabase.rpc("get_day_results", { p_date: fecha }),
+    supabase.rpc("get_entries_to_guess", { p_date: fecha })
+  ]);
   const ownEntries = (ownEntriesData ?? []) as OwnEntryRow[];
   const results = (resultData ?? []) as DayResultRow[];
+  const entriesToGuess = (entriesToGuessData ?? []) as EntryToGuessRow[];
   const status = (statusData as DayStatus | null) ?? emptyStatus;
   const ownCards: ReadCard[] = categories.map((category) => {
     const entry = ownEntries.find((item) => item.category_id === category.id);
@@ -124,6 +145,29 @@ export default async function DayPage({
       isEmpty: !entry
     };
   });
+
+  // --- Revealed partner cards (only available after all 5 guesses) ---
+  const isFullyRevealed = results.length === 5;
+
+  // Generate signed URLs for partner photos (both revealed and unrevealed).
+  // Partner photos live in private Storage; /api/photos only serves the author's
+  // own uploads, so we must use signed URLs for partner entries.
+  const partnerSignedUrls = new Map<string, string>();
+  const imagePaths = isFullyRevealed
+    ? results.map((r) => ({ id: r.entry_id, path: r.image_path }))
+    : entriesToGuess.map((e) => ({ id: e.entry_id, path: e.image_path }));
+
+  await Promise.all(
+    imagePaths.map(async ({ id, path }) => {
+      const { data: signed } = await supabase.storage
+        .from("photos")
+        .createSignedUrl(path, 3600);
+      if (signed?.signedUrl) {
+        partnerSignedUrls.set(id, signed.signedUrl);
+      }
+    })
+  );
+
   const partnerCards: ReadCard[] = results
     .map((result): ReadCard | null => {
       const realCategory = getCategory(result.real_category_id);
@@ -139,12 +183,33 @@ export default async function DayPage({
         footer: guessedCategory
           ? `Tu pista: ${guessedCategory.label}`
           : "Tu pista quedó guardada",
-        imageSrc: imagePathToPhotoUrl(result.image_path),
+        imageSrc:
+          partnerSignedUrls.get(result.entry_id) ??
+          imagePathToPhotoUrl(result.image_path),
         resultTone: result.is_correct ? "correct" : "miss"
       };
     })
     .filter(isReadCard)
     .sort((a, b) => a.category.id - b.category.id);
+
+  // --- Unrevealed partner cards (visible before all guesses are in) ---
+  const unrevealedPartnerCards: UnrevealedPartnerCard[] = entriesToGuess.map(
+    (entry) => {
+      const guessedCat = entry.guessed_category_id
+        ? getCategory(entry.guessed_category_id)
+        : null;
+
+      return {
+        categoryEmoji: entry.already_guessed && guessedCat ? guessedCat.emoji : "🔒",
+        categoryLabel:
+          entry.already_guessed && guessedCat
+            ? `Tu pista: ${guessedCat.label}`
+            : "Sin revelar",
+        entryId: entry.entry_id,
+        imageSrc: partnerSignedUrls.get(entry.entry_id) ?? ""
+      };
+    }
+  );
 
   return (
     <main className="min-h-dvh px-4 py-5 text-ink">
@@ -178,30 +243,60 @@ export default async function DayPage({
           <h2 className="section-title">Tus fotos</h2>
           <div className="read-grid">
             {ownCards.map((card, index) => (
-              <ReadOnlyPolaroid card={card} index={index} key={card.category.key} />
+              <DayPhotoCard
+                caption={card.caption}
+                categoryEmoji={card.category.emoji}
+                categoryLabel={card.category.label}
+                footer={card.footer}
+                imageSrc={card.imageSrc}
+                isEmpty={card.isEmpty}
+                key={card.category.key}
+                resultTone={card.resultTone}
+                rotation={[-2, 2, -1, 3, -3][index] ?? 0}
+              />
             ))}
           </div>
         </section>
 
         <section className="window-shell day-read-shell">
-          <h2 className="section-title">Sus fotos reveladas</h2>
-          {partnerCards.length === 5 ? (
+          <h2 className="section-title">Sus fotos</h2>
+          {isFullyRevealed ? (
+            /* All 5 guesses submitted — show revealed cards with real categories */
             <div className="read-grid">
               {partnerCards.map((card, index) => (
-                <ReadOnlyPolaroid
-                  card={card}
-                  index={index}
+                <DayPhotoCard
+                  caption={card.caption}
+                  categoryEmoji={card.category.emoji}
+                  categoryLabel={card.category.label}
+                  footer={card.footer}
+                  imageSrc={card.imageSrc}
                   key={card.category.key}
+                  resultTone={card.resultTone}
+                  rotation={[-2, 2, -1, 3, -3][index] ?? 0}
+                />
+              ))}
+            </div>
+          ) : unrevealedPartnerCards.length > 0 ? (
+            /* Partner has uploaded but not all guesses done — show photos without real category */
+            <div className="read-grid">
+              {unrevealedPartnerCards.map((card, index) => (
+                <DayPhotoCard
+                  categoryEmoji={card.categoryEmoji}
+                  categoryLabel={card.categoryLabel}
+                  imageSrc={card.imageSrc}
+                  key={card.entryId}
+                  rotation={[-2, 2, -1, 3, -3][index] ?? 0}
                 />
               ))}
             </div>
           ) : (
+            /* Partner hasn't uploaded any photos yet */
             <div className="locked-panel">
               <p className="font-hand text-4xl text-lavender-deep">
-                Aún no revelado
+                Aún sin fotos
               </p>
               <p className="mt-2 font-bold">
-                Las etiquetas reales aparecen cuando ya guardaste las 5 pistas.
+                Tu pareja aún no ha subido fotos.
               </p>
             </div>
           )}
@@ -222,37 +317,3 @@ function StatusCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ReadOnlyPolaroid({
-  card,
-  index
-}: {
-  card: ReadCard;
-  index: number;
-}) {
-  const rotation = [-2, 2, -1, 3, -3][index] ?? 0;
-
-  return (
-    <article
-      className={`read-polaroid ${card.isEmpty ? "read-polaroid-empty" : ""}`}
-      style={{ "--rotate": `${rotation}deg` } as CSSProperties}
-    >
-      <div
-        className="read-photo"
-        style={{ backgroundImage: `url(${card.imageSrc})` }}
-      >
-        <span className="washi-tape" aria-hidden="true" />
-      </div>
-      <div className="read-caption">
-        <p className="font-bold">
-          {card.category.emoji} {card.category.label}
-        </p>
-        {card.caption ? <p className="mt-1 text-sm">{card.caption}</p> : null}
-        {card.footer ? (
-          <p className={`read-result read-result-${card.resultTone}`}>
-            {card.resultTone === "correct" ? "Bien" : "Casi"} · {card.footer}
-          </p>
-        ) : null}
-      </div>
-    </article>
-  );
-}

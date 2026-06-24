@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CarreteTabs } from "@/components/CarreteTabs";
+import { CarreteBoard } from "@/components/CarreteBoard";
 import { CelebrationBurst } from "@/components/CelebrationBurst";
 import { HeaderBadge } from "@/components/HeaderBadge";
-import { MineCarrete, type OwnBoardCard } from "@/components/MineCarrete";
+import { type OwnBoardCard } from "@/components/MineCarrete";
 import { PairingPanel } from "@/components/PairingPanel";
+import {
+  type PartnerEntry,
+  type PartnerResult
+} from "@/components/PartnerCarrete";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories } from "@/lib/categories";
@@ -48,6 +52,20 @@ type PairingStatus = {
   member_count: number;
 };
 
+type EntryToGuessRow = {
+  already_guessed: boolean;
+  entry_id: string;
+  guessed_category_id: number | null;
+  image_path: string;
+};
+
+type DayResultRow = {
+  entry_id: string;
+  guessed_category_id: number;
+  is_correct: boolean;
+  real_category_id: number;
+};
+
 const emptyStatus: DayStatus = {
   my_guesses: 0,
   my_uploads: 0,
@@ -55,9 +73,26 @@ const emptyStatus: DayStatus = {
   partner_uploads: 0
 };
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" && message
+      ? message
+      : "Error desconocido.";
+  }
+
+  return "Error desconocido.";
+}
+
 export default async function HomePage() {
   let celebrationKey = "sin-fecha";
   let dayComplete = false;
+  let entriesError = "";
+  let logicalDate = "";
   let pairingStatus: PairingStatus | null = null;
   let profile: ProfileRow | null = null;
   let streak = 0;
@@ -67,6 +102,8 @@ export default async function HomePage() {
     imageSrc: category.imageSrc,
     isUploaded: false
   }));
+  let partnerEntries: PartnerEntry[] = [];
+  let initialResults: PartnerResult[] = [];
   let isGameReady = false;
 
   if (hasSupabaseEnv()) {
@@ -95,10 +132,14 @@ export default async function HomePage() {
 
     if (isGameReady && profile?.couple_id) {
       const today = getDateForTimezone(profile.timezone || "UTC");
+      logicalDate = today;
+      celebrationKey = today;
+
       const [
         { data: entries },
         { data: status },
-        { data: streakData }
+        { data: streakData },
+        { data: entriesToGuess, error: entriesToGuessError }
       ] = await Promise.all([
         supabase
           .from("entries")
@@ -106,18 +147,19 @@ export default async function HomePage() {
           .eq("author_id", user.id)
           .eq("entry_date", today),
         supabase.rpc("get_day_status", { p_date: today }).maybeSingle(),
-        supabase.rpc("get_streak").single()
+        supabase.rpc("get_streak").single(),
+        supabase.rpc("get_entries_to_guess", { p_date: today })
       ]);
-      const ownEntries = (entries ?? []) as EntryRow[];
 
+      const ownEntries = (entries ?? []) as EntryRow[];
       dayStatus = (status as DayStatus | null) ?? emptyStatus;
       streak = Number(streakData ?? 0);
-      celebrationKey = today;
       dayComplete =
         dayStatus.my_uploads === 5 &&
         dayStatus.partner_uploads === 5 &&
         dayStatus.my_guesses === 5 &&
         dayStatus.partner_guesses === 5;
+
       ownCards = categories.map((category) => {
         const entry = ownEntries.find((item) => item.category_id === category.id);
 
@@ -127,6 +169,44 @@ export default async function HomePage() {
           isUploaded: Boolean(entry)
         };
       });
+
+      if (entriesToGuessError) {
+        entriesError = getErrorMessage(entriesToGuessError);
+      } else {
+        const partnerRows = (entriesToGuess ?? []) as EntryToGuessRow[];
+        partnerEntries = await Promise.all(
+          partnerRows.map(async (entry) => {
+            const { data: signed, error: signedError } = await supabase.storage
+              .from("photos")
+              .createSignedUrl(entry.image_path, 60 * 60);
+
+            return {
+              already_guessed: entry.already_guessed,
+              entry_id: entry.entry_id,
+              guessed_category_id: entry.guessed_category_id,
+              image_path: entry.image_path,
+              image_url: signed?.signedUrl ?? null,
+              signed_url_error: signedError ? getErrorMessage(signedError) : null
+            };
+          })
+        );
+      }
+
+      if (
+        partnerEntries.length === 5 &&
+        partnerEntries.every((entry) => entry.already_guessed)
+      ) {
+        const { data: results } = await supabase.rpc("get_day_results", {
+          p_date: today
+        });
+
+        initialResults = ((results ?? []) as DayResultRow[]).map((result) => ({
+          entry_id: result.entry_id,
+          guessed_category_id: result.guessed_category_id,
+          is_correct: result.is_correct,
+          real_category_id: result.real_category_id
+        }));
+      }
     }
   }
 
@@ -148,7 +228,7 @@ export default async function HomePage() {
             <p className="text-[0.68rem] font-bold uppercase tracking-[0.28em]">
               day dreams
             </p>
-            <ThemeToggle />
+            <span className="w-[2.2rem]" />
           </div>
 
           <div className="flex items-start justify-between gap-4 p-4">
@@ -160,11 +240,14 @@ export default async function HomePage() {
                 El corcho de hoy
               </h1>
             </div>
-            {isGameReady ? (
-              <StreakBadge isCelebrating={dayComplete} value={streak} />
-            ) : (
-              <HeaderBadge />
-            )}
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              {isGameReady ? (
+                <StreakBadge isCelebrating={dayComplete} value={streak} />
+              ) : (
+                <HeaderBadge />
+              )}
+            </div>
           </div>
         </header>
 
@@ -177,9 +260,12 @@ export default async function HomePage() {
 
         {isGameReady && profile?.couple_id ? (
           <>
-            <CarreteTabs active="mine" />
-            <MineCarrete
+            {entriesError ? <p className="auth-error">{entriesError}</p> : null}
+            <CarreteBoard
               initialOwnCards={ownCards}
+              initialPartnerEntries={partnerEntries}
+              initialResults={initialResults}
+              logicalDate={logicalDate}
               profile={{
                 couple_id: profile.couple_id,
                 id: profile.id,

@@ -162,7 +162,7 @@ export function PartnerCarrete({
     const startedAt = Date.now();
     setHoldState({ entryId, progress: 0 });
     holdInterval.current = window.setInterval(() => {
-      const progress = Math.min((Date.now() - startedAt) / 3000, 1);
+      const progress = Math.min((Date.now() - startedAt) / 1000, 1);
       setHoldState({ entryId, progress });
     }, 40);
     holdTimer.current = window.setTimeout(() => {
@@ -173,7 +173,7 @@ export function PartnerCarrete({
       });
       setActiveMenu(null);
       clearHold();
-    }, 3000);
+    }, 1000);
   }
 
   function assignCategory(entryId: string, categoryId: number) {
@@ -311,15 +311,21 @@ export function PartnerCarrete({
                         data-empty={imageUnavailable}
                       >
                         {entry.image_url ? (
-                          <img
-                            alt=""
-                            aria-hidden="true"
-                            className="block aspect-[3/4] w-full object-cover"
-                            draggable={false}
-                            onError={() => setImageStatus(entry.entry_id, "error")}
-                            onLoad={() => setImageStatus(entry.entry_id, "loaded")}
-                            src={entry.image_url}
-                          />
+                          <>
+                            <div
+                              className={`image-shimmer-placeholder ${imageStatus === "loaded" ? "loaded" : ""}`}
+                              aria-hidden="true"
+                            />
+                            <img
+                              alt=""
+                              aria-hidden="true"
+                              className={`polaroid-photo-img image-fade-in ${imageStatus === "loaded" ? "loaded" : ""}`}
+                              draggable={false}
+                              onError={() => setImageStatus(entry.entry_id, "error")}
+                              onLoad={() => setImageStatus(entry.entry_id, "loaded")}
+                              src={entry.image_url}
+                            />
+                          </>
                         ) : null}
                         <span className="washi-tape" aria-hidden="true" />
                         <span className="corner-sparkle" aria-hidden="true">

@@ -56,6 +56,8 @@ export function MineCarrete({
   const [uploadingCategory, setUploadingCategory] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [imageLoaded, setImageLoaded] = useState<Record<number, boolean>>({});
+
   useEffect(() => {
     setOwnCards(initialOwnCards);
   }, [initialOwnCards]);
@@ -119,6 +121,7 @@ export function MineCarrete({
             : card
         )
       );
+      setImageLoaded((current) => ({ ...current, [categoryId]: false }));
       playSoftChime();
       firePastelConfetti("soft");
       router.refresh();
@@ -139,7 +142,10 @@ export function MineCarrete({
         transition={{ duration: 0.22 }}
       >
         <div className="corkboard grid grid-cols-2 gap-3 rounded-2xl p-3">
-          {ownCards.map((card, index) => (
+          {ownCards.map((card, index) => {
+            const isLoaded = imageLoaded[card.category.id] ?? false;
+
+            return (
             <article
               className="polaroid aspect-[3/4] rotate-[var(--rotate)] p-2"
               key={card.category.key}
@@ -156,11 +162,16 @@ export function MineCarrete({
                 type="button"
               >
                 <div className="polaroid-photo relative h-full overflow-hidden rounded-xl">
+                  <div
+                    className={`image-shimmer-placeholder ${isLoaded ? "loaded" : ""}`}
+                    aria-hidden="true"
+                  />
                   <img
                     alt=""
                     aria-hidden="true"
-                    className="polaroid-photo-img"
+                    className={`polaroid-photo-img image-fade-in ${isLoaded ? "loaded" : ""}`}
                     draggable={false}
+                    onLoad={() => setImageLoaded((current) => ({ ...current, [card.category.id]: true }))}
                     src={card.imageSrc}
                   />
                   <span className="washi-tape" aria-hidden="true" />
@@ -176,7 +187,6 @@ export function MineCarrete({
               </button>
               <input
                 accept="image/*"
-                capture="environment"
                 className="hidden-file-input"
                 onChange={(event) => handleUpload(card.category.id, event)}
                 ref={(node) => {
@@ -185,7 +195,9 @@ export function MineCarrete({
                 type="file"
               />
             </article>
-          ))}
+            );
+          })}
+
         </div>
       </motion.div>
 

@@ -195,7 +195,6 @@ export function UploadForm({ profile }: { profile: ProfileForUpload }) {
               <label className="soft-button upload-action">
                 <input
                   accept="image/*"
-                  capture="environment"
                   disabled={isBusy}
                   onChange={(event) => handleFileChange(category.id, event)}
                   type="file"

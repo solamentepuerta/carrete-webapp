@@ -1,27 +1,34 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 type ActiveCarrete = "mine" | "partner";
 
-export function CarreteTabs({ active }: { active: ActiveCarrete }) {
+export function CarreteTabs({
+  active,
+  onChange
+}: {
+  active: ActiveCarrete;
+  onChange: (tab: ActiveCarrete) => void;
+}) {
   return (
     <nav className="carrete-switch" aria-label="Cambiar carrete">
-      <Link
+      <button
         aria-current={active === "mine" ? "page" : undefined}
         className="carrete-switch-button"
-        href="/"
+        onClick={() => onChange("mine")}
+        type="button"
       >
         Mi carrete
-      </Link>
-      <Link
+      </button>
+      <button
         aria-current={active === "partner" ? "page" : undefined}
         className="carrete-switch-button"
-        href="/su-carrete"
+        onClick={() => onChange("partner")}
+        type="button"
       >
         Su carrete
-      </Link>
+      </button>
       <motion.span
         animate={{ x: active === "mine" ? "0%" : "100%" }}
         className="carrete-switch-thumb"

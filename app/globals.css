@@ -352,6 +352,78 @@ button {
   user-select: none;
 }
 
+/* ── Shimmer loading placeholder ── */
+@keyframes shimmer-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes shimmer-sparkle-float {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-28px) scale(0.6); opacity: 0; }
+}
+
+.image-shimmer-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      135deg,
+      var(--theme-lilac-soft) 0%,
+      var(--theme-lavender) 40%,
+      var(--theme-blush) 70%,
+      var(--theme-lilac-soft) 100%
+    );
+  background-size: 200% 200%;
+  animation: shimmer-pulse 1.8s ease-in-out infinite;
+  backdrop-filter: blur(8px);
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.image-shimmer-placeholder::before,
+.image-shimmer-placeholder::after {
+  position: absolute;
+  color: var(--theme-lavender-deep);
+  font-size: 1rem;
+  opacity: 0;
+  animation: shimmer-sparkle-float 2.2s ease-in-out infinite;
+  content: "✧";
+}
+
+.image-shimmer-placeholder::before {
+  left: 30%;
+  top: 55%;
+  animation-delay: 0s;
+}
+
+.image-shimmer-placeholder::after {
+  right: 28%;
+  top: 40%;
+  animation-delay: 1.1s;
+  font-size: 0.8rem;
+}
+
+.image-shimmer-placeholder.loaded {
+  opacity: 0;
+}
+
+.image-fade-in {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.image-fade-in.loaded {
+  opacity: 1;
+}
+
 .washi-tape {
   position: absolute;
   top: -0.8rem;
@@ -1126,6 +1198,7 @@ button {
   padding: 1.5rem;
   text-align: center;
 }
+
 
 @media (hover: hover) {
   .theme-toggle:hover,
