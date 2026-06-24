@@ -342,6 +342,16 @@ button {
   background-size: cover;
 }
 
+.polaroid-photo-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
 .washi-tape {
   position: absolute;
   top: -0.8rem;
@@ -478,6 +488,7 @@ button {
   padding: 0.55rem;
 }
 
+.polaroid-photo[data-empty="true"],
 .polaroid-photo-image[data-empty="true"] {
   display: grid;
   place-items: center;

@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
 import imageCompression from "browser-image-compression";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -163,6 +164,9 @@ export function HomeCarrete({
     entryId: string;
     progress: number;
   } | null>(null);
+  const [partnerImageStatus, setPartnerImageStatus] = useState<
+    Record<string, "idle" | "loaded" | "error">
+  >({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isRefreshingPartner, setIsRefreshingPartner] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
@@ -196,6 +200,16 @@ export function HomeCarrete({
     }
 
     setHoldState(null);
+  }
+
+  function setPartnerImageLoadState(
+    entryId: string,
+    status: "loaded" | "error"
+  ) {
+    setPartnerImageStatus((current) => ({
+      ...current,
+      [entryId]: status
+    }));
   }
 
   const refreshPartnerEntries = useCallback(async () => {
@@ -244,6 +258,7 @@ export function HomeCarrete({
       const shuffledEntries = shufflePartnerEntries(nextEntries, shuffleSeed);
 
       setPartnerEntries(shuffledEntries);
+      setPartnerImageStatus({});
       setAssignments((current) =>
         mergePersistedAssignments(current, shuffledEntries)
       );
@@ -267,6 +282,7 @@ export function HomeCarrete({
 
     setOwnCards(initialOwnCards);
     setPartnerEntries(shuffledEntries);
+    setPartnerImageStatus({});
     setAssignments((current) =>
       mergePersistedAssignments(current, shuffledEntries)
     );
@@ -557,6 +573,10 @@ export function HomeCarrete({
                     holdState?.entryId === entry.entry_id
                       ? holdState.progress
                       : 0;
+                  const imageStatus =
+                    partnerImageStatus[entry.entry_id] ?? "idle";
+                  const imageUnavailable =
+                    !entry.image_url || imageStatus === "error";
 
                   return (
                     <article
@@ -587,21 +607,33 @@ export function HomeCarrete({
                           type="button"
                         >
                           <div
-                            className="polaroid-photo polaroid-photo-image relative h-full overflow-hidden rounded-xl"
-                            data-empty={!entry.image_url}
-                            style={
-                              entry.image_url
-                                ? { backgroundImage: `url(${entry.image_url})` }
-                                : undefined
-                            }
+                            className="polaroid-photo relative h-full overflow-hidden rounded-xl"
+                            data-empty={imageUnavailable}
                           >
+                            {entry.image_url ? (
+                              <img
+                                alt=""
+                                aria-hidden="true"
+                                className="polaroid-photo-img"
+                                draggable={false}
+                                onError={() =>
+                                  setPartnerImageLoadState(entry.entry_id, "error")
+                                }
+                                onLoad={() =>
+                                  setPartnerImageLoadState(entry.entry_id, "loaded")
+                                }
+                                src={entry.image_url}
+                              />
+                            ) : null}
                             <span className="washi-tape" aria-hidden="true" />
                             <span className="corner-sparkle" aria-hidden="true">
                               ✧
                             </span>
                             <p className="category-card-label px-3 text-center text-base font-bold leading-snug">
-                              {!entry.image_url
-                                ? "Cargando foto..."
+                              {imageUnavailable
+                                ? imageStatus === "error"
+                                  ? "No pude cargar esta foto"
+                                  : "Cargando foto..."
                                 : guessedCategory
                                   ? `${guessedCategory.emoji} ${guessedCategory.label}`
                                   : "Elegir pista"}
