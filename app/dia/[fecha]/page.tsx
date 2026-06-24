@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories, type Category } from "@/lib/categories";
 import { formatLongDate, isIsoDate } from "@/lib/dates";
+import { imagePathToPhotoUrl } from "@/lib/photo-url";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,8 +42,6 @@ type ReadCard = {
   resultTone?: "correct" | "miss";
 };
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
-
 const emptyStatus: DayStatus = {
   my_guesses: 0,
   my_uploads: 0,
@@ -56,27 +55,6 @@ function getCategory(categoryId: number) {
 
 function isReadCard(card: ReadCard | null): card is ReadCard {
   return card !== null;
-}
-
-async function getSignedUrls(
-  supabase: SupabaseServerClient,
-  imagePaths: string[]
-) {
-  const urls = new Map<string, string>();
-
-  await Promise.all(
-    imagePaths.map(async (imagePath) => {
-      const { data } = await supabase.storage
-        .from("photos")
-        .createSignedUrl(imagePath, 60 * 60);
-
-      if (data?.signedUrl) {
-        urls.set(imagePath, data.signedUrl);
-      }
-    })
-  );
-
-  return urls;
 }
 
 export default async function DayPage({
@@ -135,14 +113,6 @@ export default async function DayPage({
     ]);
   const ownEntries = (ownEntriesData ?? []) as OwnEntryRow[];
   const results = (resultData ?? []) as DayResultRow[];
-  const ownUrls = await getSignedUrls(
-    supabase,
-    ownEntries.map((entry) => entry.image_path)
-  );
-  const resultUrls = await getSignedUrls(
-    supabase,
-    results.map((entry) => entry.image_path)
-  );
   const status = (statusData as DayStatus | null) ?? emptyStatus;
   const ownCards: ReadCard[] = categories.map((category) => {
     const entry = ownEntries.find((item) => item.category_id === category.id);
@@ -150,9 +120,7 @@ export default async function DayPage({
     return {
       caption: entry?.caption,
       category,
-      imageSrc: entry
-        ? ownUrls.get(entry.image_path) ?? category.imageSrc
-        : category.imageSrc,
+      imageSrc: entry ? imagePathToPhotoUrl(entry.image_path) : category.imageSrc,
       isEmpty: !entry
     };
   });
@@ -171,7 +139,7 @@ export default async function DayPage({
         footer: guessedCategory
           ? `Tu pista: ${guessedCategory.label}`
           : "Tu pista quedó guardada",
-        imageSrc: resultUrls.get(result.image_path) ?? realCategory.imageSrc,
+        imageSrc: imagePathToPhotoUrl(result.image_path),
         resultTone: result.is_correct ? "correct" : "miss"
       };
     })

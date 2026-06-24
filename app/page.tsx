@@ -12,6 +12,7 @@ import { PairingPanel } from "@/components/PairingPanel";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { categories } from "@/lib/categories";
+import { imagePathToPhotoUrl } from "@/lib/photo-url";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -143,19 +144,6 @@ export default async function HomePage() {
         supabase.rpc("get_entries_to_guess", { p_date: today })
       ]);
       const ownEntries = (entries ?? []) as EntryRow[];
-      const signedUrls = new Map<string, string>();
-
-      await Promise.all(
-        ownEntries.map(async (entry) => {
-          const { data } = await supabase.storage
-            .from("photos")
-            .createSignedUrl(entry.image_path, 60 * 60);
-
-          if (data?.signedUrl) {
-            signedUrls.set(entry.image_path, data.signedUrl);
-          }
-        })
-      );
 
       dayStatus = (status as DayStatus | null) ?? emptyStatus;
       streak = Number(streakData ?? 0);
@@ -170,29 +158,19 @@ export default async function HomePage() {
 
         return {
           category,
-          imageSrc: entry
-            ? signedUrls.get(entry.image_path) ?? category.imageSrc
-            : category.imageSrc,
+          imageSrc: entry ? imagePathToPhotoUrl(entry.image_path) : category.imageSrc,
           isUploaded: Boolean(entry)
         };
       });
 
       const partnerRows = (entriesToGuess ?? []) as EntryToGuessRow[];
-      partnerEntries = await Promise.all(
-        partnerRows.map(async (entry) => {
-          const { data: signed } = await supabase.storage
-            .from("photos")
-            .createSignedUrl(entry.image_path, 60 * 60);
-
-          return {
-            already_guessed: entry.already_guessed,
-            entry_id: entry.entry_id,
-            guessed_category_id: entry.guessed_category_id,
-            image_path: entry.image_path,
-            image_url: signed?.signedUrl ?? ""
-          };
-        })
-      );
+      partnerEntries = partnerRows.map((entry) => ({
+        already_guessed: entry.already_guessed,
+        entry_id: entry.entry_id,
+        guessed_category_id: entry.guessed_category_id,
+        image_path: entry.image_path,
+        image_url: imagePathToPhotoUrl(entry.image_path)
+      }));
 
       if (
         partnerEntries.length === 5 &&

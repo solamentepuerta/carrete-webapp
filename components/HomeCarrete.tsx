@@ -14,6 +14,7 @@ import {
 } from "react";
 import { categories, type Category } from "@/lib/categories";
 import { firePastelConfetti, playSoftChime } from "@/lib/celebrations";
+import { imagePathToPhotoUrl } from "@/lib/photo-url";
 import { createClient } from "@/lib/supabase/client";
 
 type BoardMode = "mine" | "partner";
@@ -236,25 +237,13 @@ export function HomeCarrete({
         guessed_category_id: number | null;
         image_path: string;
       }>;
-      const nextEntries = await Promise.all(
-        rows.map(async (entry) => {
-          const { data: signed, error: signedError } = await supabase.storage
-            .from("photos")
-            .createSignedUrl(entry.image_path, 60 * 60);
-
-          if (signedError) {
-            throw signedError;
-          }
-
-          return {
-            already_guessed: entry.already_guessed,
-            entry_id: entry.entry_id,
-            guessed_category_id: entry.guessed_category_id,
-            image_path: entry.image_path,
-            image_url: signed?.signedUrl ?? ""
-          };
-        })
-      );
+      const nextEntries = rows.map((entry) => ({
+        already_guessed: entry.already_guessed,
+        entry_id: entry.entry_id,
+        guessed_category_id: entry.guessed_category_id,
+        image_path: entry.image_path,
+        image_url: imagePathToPhotoUrl(entry.image_path)
+      }));
       const shuffledEntries = shufflePartnerEntries(nextEntries, shuffleSeed);
 
       setPartnerEntries(shuffledEntries);
