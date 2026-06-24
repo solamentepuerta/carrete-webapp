@@ -317,6 +317,8 @@ button {
 }
 
 .polaroid-photo-real {
+  background-position: center;
+  background-repeat: no-repeat;
   background-size: cover;
 }
 
@@ -499,6 +501,7 @@ button {
 }
 
 .upload-preview-filled {
+  background-repeat: no-repeat;
   background-size: cover;
 }
 
@@ -507,6 +510,7 @@ button {
   inset: 0;
   background: inherit;
   background-position: center;
+  background-repeat: no-repeat;
   background-size: cover;
 }
 
@@ -597,6 +601,7 @@ button {
   border: 2px solid var(--theme-line);
   border-radius: 0.85rem;
   background-position: center;
+  background-repeat: no-repeat;
   background-size: cover;
 }
 
@@ -812,6 +817,7 @@ button {
   border: 2px solid var(--theme-line);
   border-radius: 0.75rem;
   background-position: center;
+  background-repeat: no-repeat;
   background-size: cover;
 }
 
