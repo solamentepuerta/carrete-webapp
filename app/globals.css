@@ -487,6 +487,11 @@ button {
   padding: 0;
 }
 
+.guess-polaroid-home .card-front {
+  display: flex;
+  flex-direction: column;
+}
+
 .guess-polaroid-home .card-back {
   overflow: hidden;
   padding: 0.55rem;

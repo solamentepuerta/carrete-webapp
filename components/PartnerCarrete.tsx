@@ -307,14 +307,14 @@ export function PartnerCarrete({
                       type="button"
                     >
                       <div
-                        className="polaroid-photo relative h-full overflow-hidden rounded-xl"
+                        className="polaroid-photo relative flex-1 overflow-hidden rounded-xl"
                         data-empty={imageUnavailable}
                       >
                         {entry.image_url ? (
                           <img
                             alt=""
                             aria-hidden="true"
-                            className="polaroid-photo-img"
+                            className="block aspect-[3/4] w-full object-cover"
                             draggable={false}
                             onError={() => setImageStatus(entry.entry_id, "error")}
                             onLoad={() => setImageStatus(entry.entry_id, "loaded")}
