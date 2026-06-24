@@ -36,10 +36,14 @@ begin
     v_couple_id := null;
     v_code := generate_pairing_code();
 
-    insert into couples (invite_code)
-    values (v_code)
-    on conflict (invite_code) do nothing
-    returning id into v_couple_id;
+    begin
+      insert into couples (invite_code)
+      values (v_code)
+      returning id into v_couple_id;
+    exception
+      when unique_violation then
+        v_couple_id := null;
+    end;
 
     exit when v_couple_id is not null;
   end loop;
@@ -52,10 +56,10 @@ begin
     timezone = excluded.timezone;
 
   return query
-  select v_code,
-         v_couple_id,
-         1,
-         false;
+  select v_code::text as invite_code,
+         v_couple_id::uuid as couple_id,
+         1::int as member_count,
+         false as is_paired;
 end;
 $$;
 
@@ -128,10 +132,10 @@ begin
   where p.couple_id = v_couple_id;
 
   return query
-  select v_code,
-         v_couple_id,
-         v_count,
-         (v_count >= 2);
+  select v_code::text as invite_code,
+         v_couple_id::uuid as couple_id,
+         v_count::int as member_count,
+         (v_count >= 2) as is_paired;
 end;
 $$;
 
