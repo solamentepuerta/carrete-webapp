@@ -444,11 +444,15 @@ button {
 .carrete-switch-button {
   position: relative;
   z-index: 1;
+  display: flex;
   min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
   border: 0;
   background: transparent;
   color: var(--theme-ink);
   font-weight: 900;
+  text-decoration: none;
 }
 
 .polaroid-button {
