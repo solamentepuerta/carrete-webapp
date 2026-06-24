@@ -200,6 +200,7 @@ begin
   end if;
 
   loop
+    v_couple_id := null;
     v_code := generate_pairing_code();
 
     insert into couples (invite_code)
@@ -263,18 +264,18 @@ begin
     v_timezone := 'UTC';
   end if;
 
-  select id into v_couple_id
-  from couples
-  where invite_code = v_code;
+  select c.id into v_couple_id
+  from couples c
+  where c.invite_code = v_code;
 
   if v_couple_id is null then
     raise exception 'codigo invalido';
   end if;
 
   select count(*)::int into v_count
-  from profiles
-  where couple_id = v_couple_id
-    and id <> auth.uid();
+  from profiles p
+  where p.couple_id = v_couple_id
+    and p.id <> auth.uid();
 
   if v_count >= 2 then
     raise exception 'este codigo ya esta completo';
@@ -288,8 +289,8 @@ begin
     timezone = excluded.timezone;
 
   select count(*)::int into v_count
-  from profiles
-  where couple_id = v_couple_id;
+  from profiles p
+  where p.couple_id = v_couple_id;
 
   return query
   select v_code,

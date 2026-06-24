@@ -7,6 +7,7 @@ import {
   type PartnerEntry,
   type PartnerResult
 } from "@/components/HomeCarrete";
+import { HeaderBadge } from "@/components/HeaderBadge";
 import { PairingPanel } from "@/components/PairingPanel";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -97,6 +98,7 @@ export default async function HomePage() {
   }));
   let partnerEntries: PartnerEntry[] = [];
   let initialResults: PartnerResult[] = [];
+  let isGameReady = false;
 
   if (hasSupabaseEnv()) {
     const supabase = await createClient();
@@ -120,8 +122,9 @@ export default async function HomePage() {
       .rpc("get_pairing_status")
       .maybeSingle();
     pairingStatus = (pairingData as PairingStatus | null) ?? null;
+    isGameReady = Boolean(profile?.couple_id && pairingStatus?.is_paired);
 
-    if (profile?.couple_id && pairingStatus?.is_paired) {
+    if (isGameReady && profile?.couple_id) {
       const today = getDateForTimezone(profile.timezone || "UTC");
       logicalDate = today;
       const [
@@ -238,16 +241,22 @@ export default async function HomePage() {
                 El corcho de hoy
               </h1>
             </div>
-            <StreakBadge isCelebrating={dayComplete} value={streak} />
+            {isGameReady ? (
+              <StreakBadge isCelebrating={dayComplete} value={streak} />
+            ) : (
+              <HeaderBadge />
+            )}
           </div>
         </header>
 
-        <CelebrationBurst
-          celebrationKey={`home-${celebrationKey}-${streak}`}
-          enabled={dayComplete}
-        />
+        {isGameReady ? (
+          <CelebrationBurst
+            celebrationKey={`home-${celebrationKey}-${streak}`}
+            enabled={dayComplete}
+          />
+        ) : null}
 
-        {profile?.couple_id && pairingStatus?.is_paired ? (
+        {isGameReady && profile?.couple_id ? (
           <HomeCarrete
             initialOwnCards={ownCards}
             initialPartnerEntries={partnerEntries}
@@ -263,28 +272,30 @@ export default async function HomePage() {
           <PairingPanel initialStatus={pairingStatus} />
         )}
 
-        <section className="grid grid-cols-2 gap-3">
-          <StatusCard
-            label="Tus fotos"
-            value={`${dayStatus.my_uploads}/5`}
-            tone="violet"
-          />
-          <StatusCard
-            label="Sus fotos"
-            value={`${dayStatus.partner_uploads}/5`}
-            tone="cloud"
-          />
-          <StatusCard
-            label="Tus pistas"
-            value={`${dayStatus.my_guesses}/5`}
-            tone="pink"
-          />
-          <StatusCard
-            label="Sus pistas"
-            value={`${dayStatus.partner_guesses}/5`}
-            tone="mint"
-          />
-        </section>
+        {isGameReady ? (
+          <section className="grid grid-cols-2 gap-3">
+            <StatusCard
+              label="Tus fotos"
+              value={`${dayStatus.my_uploads}/5`}
+              tone="violet"
+            />
+            <StatusCard
+              label="Sus fotos"
+              value={`${dayStatus.partner_uploads}/5`}
+              tone="cloud"
+            />
+            <StatusCard
+              label="Tus pistas"
+              value={`${dayStatus.my_guesses}/5`}
+              tone="pink"
+            />
+            <StatusCard
+              label="Sus pistas"
+              value={`${dayStatus.partner_guesses}/5`}
+              tone="mint"
+            />
+          </section>
+        ) : null}
 
         <nav className="mt-auto grid grid-cols-2 gap-3 pb-1">
           {navItems.map((item) => (

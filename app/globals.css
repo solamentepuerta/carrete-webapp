@@ -266,6 +266,20 @@ button {
   place-items: center;
 }
 
+.header-icon-card {
+  display: grid;
+  min-height: 5.6rem;
+  min-width: 5.6rem;
+  place-items: center;
+  padding: 0.55rem;
+}
+
+.header-icon-card img {
+  height: 3.6rem;
+  width: 3.6rem;
+  object-fit: contain;
+}
+
 .streak-number-row {
   display: flex;
   align-items: center;

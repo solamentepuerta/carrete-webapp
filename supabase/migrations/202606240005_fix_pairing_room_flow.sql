@@ -1,25 +1,4 @@
--- Email/password pairing flow and same-day category replacement.
-
-create index if not exists profiles_couple_id_idx on profiles (couple_id);
-
-create or replace function generate_pairing_code()
-returns text
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  code text := '';
-  i int;
-begin
-  for i in 1..6 loop
-    code := code || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
-  end loop;
-
-  return code;
-end;
-$$;
+-- Fix pairing room RPC ambiguity and keep create/join room flow stable.
 
 create or replace function create_pairing_code(
   p_display_name text,
@@ -79,6 +58,8 @@ begin
          false;
 end;
 $$;
+
+grant execute on function create_pairing_code(text, text) to authenticated;
 
 create or replace function join_pairing_code(
   p_invite_code text,
@@ -154,66 +135,4 @@ begin
 end;
 $$;
 
-create or replace function get_pairing_status()
-returns table (
-  invite_code text,
-  couple_id uuid,
-  member_count int,
-  is_paired boolean
-)
-language sql
-security definer
-set search_path = public
-as $$
-  select c.invite_code,
-         p.couple_id,
-         coalesce(member_counts.member_count, 0)::int,
-         coalesce(member_counts.member_count, 0) >= 2
-  from profiles p
-  left join couples c on c.id = p.couple_id
-  left join lateral (
-    select count(*)::int as member_count
-    from profiles p2
-    where p2.couple_id = p.couple_id
-  ) member_counts on true
-  where p.id = auth.uid();
-$$;
-
-create or replace function create_entry(
-  p_category_id smallint,
-  p_image_path text,
-  p_caption text default null
-)
-returns uuid
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_tz text;
-  v_date date;
-  v_id uuid;
-begin
-  select timezone into v_tz from profiles where id = auth.uid();
-  v_date := (now() at time zone coalesce(v_tz, 'UTC'))::date;
-
-  insert into entries (couple_id, author_id, entry_date, category_id, image_path, caption)
-  values (my_couple_id(), auth.uid(), v_date, p_category_id, p_image_path, p_caption)
-  on conflict (author_id, entry_date, category_id) do update set
-    image_path = excluded.image_path,
-    caption = excluded.caption,
-    created_at = now()
-  returning id into v_id;
-
-  return v_id;
-end;
-$$;
-
-revoke all on function generate_pairing_code() from public;
-revoke all on function create_pairing_code(text, text) from public;
-revoke all on function join_pairing_code(text, text, text) from public;
-revoke all on function get_pairing_status() from public;
-
-grant execute on function create_pairing_code(text, text) to authenticated;
 grant execute on function join_pairing_code(text, text, text) to authenticated;
-grant execute on function get_pairing_status() to authenticated;

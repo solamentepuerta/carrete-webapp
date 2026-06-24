@@ -21,7 +21,18 @@ function getLocalTimezone() {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "No se pudo emparejar.";
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" && message
+      ? message
+      : "No se pudo emparejar.";
+  }
+
+  return "No se pudo emparejar.";
 }
 
 export function PairingPanel({
@@ -63,6 +74,10 @@ export function PairingPanel({
         throw error;
       }
 
+      if (!data) {
+        throw new Error("La sala no devolvió un código. Revisa la migración de Supabase.");
+      }
+
       setStatus(data as PairingStatus);
       router.refresh();
     } catch (error) {
@@ -75,7 +90,7 @@ export function PairingPanel({
   return (
     <section className="window-shell pairing-panel">
       <p className="font-hand text-5xl text-lavender-deep">Carrete</p>
-      <h1 className="mt-2 text-3xl font-bold">Encuentra tu carrete compartido</h1>
+      <h1 className="mt-2 text-3xl font-bold">Crea una sala para dos</h1>
 
       {status?.invite_code ? (
         <div className="pairing-code-card">
@@ -84,7 +99,7 @@ export function PairingPanel({
           <p>
             {status.is_paired
               ? "Ya están emparejados. El corcho está listo."
-              : "Compártelo con tu pareja y vuelve cuando se una."}
+              : "Comparte este código para que tu pareja se una a la sala."}
           </p>
         </div>
       ) : null}
@@ -97,7 +112,7 @@ export function PairingPanel({
           role="tab"
           type="button"
         >
-          Crear código
+          Crear sala
         </button>
         <button
           aria-selected={mode === "join"}
@@ -146,8 +161,8 @@ export function PairingPanel({
           {isSubmitting
             ? "Guardando..."
             : mode === "create"
-              ? "Crear mi código"
-              : "Unirme al carrete"}
+              ? "Crear sala"
+              : "Unirme a una sala"}
         </button>
       </form>
     </section>
