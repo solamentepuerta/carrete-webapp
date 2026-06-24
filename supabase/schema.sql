@@ -465,7 +465,7 @@ as $$
   where e.couple_id = my_couple_id()
     and e.author_id <> auth.uid()
     and e.entry_date = p_date
-  order by e.created_at;
+  order by md5(e.id::text || ':' || p_date::text || ':' || auth.uid()::text);
 $$;
 
 create or replace function submit_guess(p_entry_id uuid, p_category_id smallint)

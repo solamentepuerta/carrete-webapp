@@ -473,38 +473,96 @@ button {
   padding: 0;
 }
 
-.guess-popover {
-  position: absolute;
-  right: -0.25rem;
-  bottom: 0.75rem;
-  left: -0.25rem;
-  z-index: 6;
+.guess-polaroid-home .card-back {
+  overflow: hidden;
+  padding: 0.55rem;
+}
+
+.polaroid-photo-image[data-empty="true"] {
   display: grid;
-  gap: 0.35rem;
+  place-items: center;
+  background:
+    linear-gradient(90deg, var(--theme-photo-grid) 1px, transparent 1px),
+    linear-gradient(var(--theme-photo-grid) 1px, transparent 1px),
+    var(--theme-card);
+  background-size: 16px 16px;
+}
+
+.guess-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  align-items: end;
+  padding: 1rem;
+  background: rgb(51 47 63 / 0.28);
+}
+
+.guess-action-sheet {
+  width: min(100%, 26rem);
+  margin-inline: auto;
   border: 3px solid var(--theme-line);
   border-radius: 1rem;
   background: var(--theme-window);
-  padding: 0.55rem;
+  padding: 0.85rem;
   box-shadow: var(--shadow-kawaii);
 }
 
-.guess-popover button {
+.guess-sheet-title {
+  margin-bottom: 0.65rem;
+  text-align: center;
+  font-weight: 900;
+}
+
+.guess-sheet-options {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.guess-sheet-options button {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   border: 2px solid var(--theme-line);
   border-radius: 0.7rem;
   background: var(--theme-lilac-soft);
-  padding: 0.45rem 0.55rem;
+  padding: 0.6rem 0.7rem;
   color: var(--theme-ink);
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   font-weight: 900;
   line-height: 1.1;
   text-align: left;
 }
 
-.guess-popover button:disabled {
+.guess-sheet-options button:disabled {
   opacity: 0.38;
+}
+
+.home-result-title {
+  font-size: clamp(1.9rem, 8vw, 2.45rem);
+  line-height: 0.85;
+}
+
+.home-result-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+
+.home-result-category {
+  max-width: 100%;
+  font-size: clamp(0.88rem, 3.5vw, 1rem);
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.home-result-guess {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: clamp(0.72rem, 3vw, 0.86rem);
+  line-height: 1.18;
 }
 
 .hold-progress {
@@ -1063,5 +1121,11 @@ button {
   .calendar-day:hover {
     transform: translateY(-3px);
     box-shadow: 10px 10px 0 rgb(51 47 63 / 0.13);
+  }
+}
+
+@media (min-width: 640px) {
+  .guess-sheet-backdrop {
+    align-items: center;
   }
 }

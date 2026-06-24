@@ -188,6 +188,7 @@ export default async function HomePage() {
             already_guessed: entry.already_guessed,
             entry_id: entry.entry_id,
             guessed_category_id: entry.guessed_category_id,
+            image_path: entry.image_path,
             image_url: signed?.signedUrl ?? ""
           };
         })

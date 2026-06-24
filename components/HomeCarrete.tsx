@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ChangeEvent,
   type CSSProperties,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -32,6 +33,7 @@ export type PartnerEntry = {
   already_guessed: boolean;
   entry_id: string;
   guessed_category_id: number | null;
+  image_path: string;
   image_url: string;
 };
 
@@ -76,7 +78,57 @@ function getCategory(categoryId: number) {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "No pude completar la acción.";
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" && message
+      ? message
+      : "No pude completar la acción.";
+  }
+
+  return "No pude completar la acción.";
+}
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+
+  return hash >>> 0;
+}
+
+function shufflePartnerEntries(entries: PartnerEntry[], seed: string) {
+  return [...entries].sort((first, second) => {
+    const firstHash = hashString(`${seed}:${first.entry_id}`);
+    const secondHash = hashString(`${seed}:${second.entry_id}`);
+
+    if (firstHash === secondHash) {
+      return first.entry_id.localeCompare(second.entry_id);
+    }
+
+    return firstHash - secondHash;
+  });
+}
+
+function mergePersistedAssignments(
+  current: GuessAssignments,
+  entries: PartnerEntry[]
+) {
+  const validIds = new Set(entries.map((entry) => entry.entry_id));
+  const persisted = getInitialAssignments(entries);
+  const next = Object.fromEntries(
+    Object.entries(current).filter(([entryId]) => validIds.has(entryId))
+  ) as GuessAssignments;
+
+  return {
+    ...next,
+    ...persisted
+  };
 }
 
 export function HomeCarrete({
@@ -95,9 +147,12 @@ export function HomeCarrete({
   const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
   const holdTimer = useRef<number | null>(null);
   const holdInterval = useRef<number | null>(null);
+  const shuffleSeed = `${logicalDate}:${profile.id}`;
   const [mode, setMode] = useState<BoardMode>("mine");
   const [ownCards, setOwnCards] = useState(initialOwnCards);
-  const [partnerEntries] = useState(initialPartnerEntries);
+  const [partnerEntries, setPartnerEntries] = useState(() =>
+    shufflePartnerEntries(initialPartnerEntries, shuffleSeed)
+  );
   const [assignments, setAssignments] = useState<GuessAssignments>(() =>
     getInitialAssignments(initialPartnerEntries)
   );
@@ -109,6 +164,7 @@ export function HomeCarrete({
     progress: number;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isRefreshingPartner, setIsRefreshingPartner] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
   const usedCategories = useMemo(
     () => new Set(Object.values(assignments).filter(Boolean)),
@@ -123,6 +179,10 @@ export function HomeCarrete({
     partnerEntries.length === 5 &&
     partnerEntries.every((entry) => assignments[entry.entry_id]) &&
     results.length === 0;
+  const activeEntry = partnerEntries.find((entry) => entry.entry_id === activeMenu);
+  const activeAssignment = activeEntry
+    ? assignments[activeEntry.entry_id]
+    : undefined;
 
   function clearHold() {
     if (holdTimer.current) {
@@ -138,7 +198,88 @@ export function HomeCarrete({
     setHoldState(null);
   }
 
+  const refreshPartnerEntries = useCallback(async () => {
+    if (results.length > 0) {
+      return;
+    }
+
+    setIsRefreshingPartner(true);
+    setErrorMessage("");
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("get_entries_to_guess", {
+        p_date: logicalDate
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const rows = (data ?? []) as Array<{
+        already_guessed: boolean;
+        entry_id: string;
+        guessed_category_id: number | null;
+        image_path: string;
+      }>;
+      const nextEntries = await Promise.all(
+        rows.map(async (entry) => {
+          const { data: signed, error: signedError } = await supabase.storage
+            .from("photos")
+            .createSignedUrl(entry.image_path, 60 * 60);
+
+          if (signedError) {
+            throw signedError;
+          }
+
+          return {
+            already_guessed: entry.already_guessed,
+            entry_id: entry.entry_id,
+            guessed_category_id: entry.guessed_category_id,
+            image_path: entry.image_path,
+            image_url: signed?.signedUrl ?? ""
+          };
+        })
+      );
+      const shuffledEntries = shufflePartnerEntries(nextEntries, shuffleSeed);
+
+      setPartnerEntries(shuffledEntries);
+      setAssignments((current) =>
+        mergePersistedAssignments(current, shuffledEntries)
+      );
+      setActiveMenu((current) =>
+        current && shuffledEntries.some((entry) => entry.entry_id === current)
+          ? current
+          : null
+      );
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    } finally {
+      setIsRefreshingPartner(false);
+    }
+  }, [logicalDate, results.length, shuffleSeed]);
+
+  useEffect(() => {
+    const shuffledEntries = shufflePartnerEntries(
+      initialPartnerEntries,
+      shuffleSeed
+    );
+
+    setOwnCards(initialOwnCards);
+    setPartnerEntries(shuffledEntries);
+    setAssignments((current) =>
+      mergePersistedAssignments(current, shuffledEntries)
+    );
+    setResults(initialResults);
+  }, [initialOwnCards, initialPartnerEntries, initialResults, shuffleSeed]);
+
   useEffect(() => clearHold, []);
+
+  useEffect(() => {
+    if (mode === "partner") {
+      void refreshPartnerEntries();
+    }
+  }, [mode, refreshPartnerEntries]);
 
   function startUnassignHold(entryId: string) {
     if (!assignments[entryId] || results.length > 0) {
@@ -447,16 +588,23 @@ export function HomeCarrete({
                         >
                           <div
                             className="polaroid-photo polaroid-photo-image relative h-full overflow-hidden rounded-xl"
-                            style={{ backgroundImage: `url(${entry.image_url})` }}
+                            data-empty={!entry.image_url}
+                            style={
+                              entry.image_url
+                                ? { backgroundImage: `url(${entry.image_url})` }
+                                : undefined
+                            }
                           >
                             <span className="washi-tape" aria-hidden="true" />
                             <span className="corner-sparkle" aria-hidden="true">
                               ✧
                             </span>
                             <p className="category-card-label px-3 text-center text-base font-bold leading-snug">
-                              {guessedCategory
-                                ? `${guessedCategory.emoji} ${guessedCategory.label}`
-                                : "Elegir pista"}
+                              {!entry.image_url
+                                ? "Cargando foto..."
+                                : guessedCategory
+                                  ? `${guessedCategory.emoji} ${guessedCategory.label}`
+                                  : "Elegir pista"}
                             </p>
                             {holdProgress > 0 ? (
                               <span
@@ -473,45 +621,24 @@ export function HomeCarrete({
                         </button>
 
                         <div className="card-face card-back">
-                          <p className="font-hand text-4xl text-lavender-deep">
+                          <p className="home-result-title font-hand text-lavender-deep">
                             {result?.is_correct ? "Bien" : "Casi"}
                           </p>
-                          <p className="mt-2 text-sm font-bold uppercase tracking-wide text-ink/60">
+                          <p className="home-result-kicker mt-1 font-bold uppercase text-ink/60">
                             Era
                           </p>
-                          <p className="mt-1 font-bold">
+                          <p className="home-result-category mt-1 font-bold">
                             {realCategory
                               ? `${realCategory.emoji} ${realCategory.label}`
                               : "Sin revelar"}
                           </p>
                           {guessedCategory ? (
-                            <p className="mt-3 text-sm font-bold">
+                            <p className="home-result-guess mt-2 font-bold">
                               Tu pista: {guessedCategory.label}
                             </p>
                           ) : null}
                         </div>
                       </div>
-
-                      {activeMenu === entry.entry_id && results.length === 0 ? (
-                        <div className="guess-popover">
-                          {categories.map((category) => (
-                            <button
-                              disabled={
-                                usedCategories.has(category.id) &&
-                                assignment !== category.id
-                              }
-                              key={category.key}
-                              onClick={() =>
-                                assignCategory(entry.entry_id, category.id)
-                              }
-                              type="button"
-                            >
-                              <span aria-hidden="true">{category.emoji}</span>
-                              {category.label}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
                     </article>
                   );
                 })}
@@ -552,8 +679,58 @@ export function HomeCarrete({
                 {isRevealing ? "Revelando..." : "Revelar"}
               </button>
             ) : null}
+
+            {mode === "partner" && results.length === 0 ? (
+              <button
+                className="soft-button mt-3 w-full"
+                disabled={isRefreshingPartner}
+                onClick={refreshPartnerEntries}
+                type="button"
+              >
+                {isRefreshingPartner ? "Actualizando..." : "Actualizar carrete"}
+              </button>
+            ) : null}
           </motion.div>
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {activeEntry && results.length === 0 ? (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="guess-sheet-backdrop"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            onClick={() => setActiveMenu(null)}
+          >
+            <motion.div
+              animate={{ y: 0 }}
+              className="guess-action-sheet"
+              exit={{ y: 24 }}
+              initial={{ y: 24 }}
+              onClick={(event) => event.stopPropagation()}
+              transition={{ damping: 18, stiffness: 220, type: "spring" }}
+            >
+              <p className="guess-sheet-title">Elige una pista</p>
+              <div className="guess-sheet-options">
+                {categories.map((category) => (
+                  <button
+                    disabled={
+                      usedCategories.has(category.id) &&
+                      activeAssignment !== category.id
+                    }
+                    key={category.key}
+                    onClick={() => assignCategory(activeEntry.entry_id, category.id)}
+                    type="button"
+                  >
+                    <span aria-hidden="true">{category.emoji}</span>
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
 
       {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
