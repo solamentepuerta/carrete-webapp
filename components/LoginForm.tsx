@@ -12,6 +12,14 @@ function getErrorMessage(error: unknown) {
   return "No se pudo entrar a Carrete.";
 }
 
+function getEmailRedirectTo() {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return `${window.location.origin}/auth/callback`;
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -36,6 +44,7 @@ export function LoginForm() {
           email,
           password,
           options: {
+            emailRedirectTo: getEmailRedirectTo(),
             data: {
               display_name: displayName
             }

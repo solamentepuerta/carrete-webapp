@@ -117,6 +117,10 @@ Esta fase añade pulido de experiencia:
 1. En Supabase Auth, activa el provider **Email**.
 2. Ejecuta `supabase/migrations/202606240004_email_pairing_and_entry_upsert.sql`.
 3. Anonymous sign-ins ya no es necesario para usuarios nuevos.
+4. En **Authentication > URL Configuration**, configura:
+   - **Site URL:** la URL de producción en Vercel.
+   - **Redirect URLs:** `https://tu-dominio.vercel.app/auth/callback`.
+   - Para desarrollo local, agrega también `http://localhost:3000/auth/callback`.
 
 ## Comandos
 
