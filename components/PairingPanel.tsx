@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -47,6 +47,18 @@ export function PairingPanel({
   const [status, setStatus] = useState(initialStatus);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const visibleCodeStatus =
+    status?.invite_code && (mode === "create" || status.is_paired)
+      ? status
+      : null;
+  const isWaitingInOwnRoom = Boolean(
+    mode === "create" && status?.invite_code && !status.is_paired
+  );
+  const isAlreadyPaired = Boolean(status?.is_paired);
+
+  useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,7 +90,8 @@ export function PairingPanel({
         throw new Error("La sala no devolvió un código. Revisa la migración de Supabase.");
       }
 
-      setStatus(data as PairingStatus);
+      const nextStatus = data as PairingStatus;
+      setStatus(nextStatus);
       router.refresh();
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
@@ -92,14 +105,17 @@ export function PairingPanel({
       <p className="font-hand text-5xl text-lavender-deep">Carrete</p>
       <h1 className="mt-2 text-3xl font-bold">Crea una sala para dos</h1>
 
-      {status?.invite_code ? (
+      {visibleCodeStatus ? (
         <div className="pairing-code-card">
           <span>Tu código</span>
-          <strong>{status.invite_code}</strong>
+          <strong>{visibleCodeStatus.invite_code}</strong>
           <p>
-            {status.is_paired
+            {visibleCodeStatus.is_paired
               ? "Ya están emparejados. El corcho está listo."
               : "Comparte este código para que tu pareja se una a la sala."}
+          </p>
+          <p className="mt-2 text-sm font-bold text-ink/70">
+            {Math.min(visibleCodeStatus.member_count, 2)}/2 en la sala
           </p>
         </div>
       ) : null}
@@ -125,21 +141,37 @@ export function PairingPanel({
         </button>
       </div>
 
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <label className="auth-field">
-          <span>Tu nombre</span>
-          <input
-            autoComplete="name"
-            maxLength={40}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder="Puerta"
-            required
-            type="text"
-            value={displayName}
-          />
-        </label>
+      {isWaitingInOwnRoom ? (
+        <div className="auth-form">
+          <p className="text-sm font-bold text-ink/70">
+            Cuando tu pareja entre con otra cuenta, la sala se abrirá para ambos.
+          </p>
+          <button className="soft-button w-full" onClick={() => router.refresh()} type="button">
+            Revisar sala
+          </button>
+        </div>
+      ) : isAlreadyPaired ? (
+        <div className="auth-form">
+          <button className="soft-button w-full" onClick={() => router.refresh()} type="button">
+            Entrar al corcho
+          </button>
+        </div>
+      ) : (
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label className="auth-field">
+            <span>Tu nombre</span>
+            <input
+              autoComplete="name"
+              maxLength={40}
+              onChange={(event) => setDisplayName(event.target.value)}
+              placeholder="Puerta"
+              required
+              type="text"
+              value={displayName}
+            />
+          </label>
 
-        {mode === "join" ? (
+          {mode === "join" ? (
           <label className="auth-field">
             <span>Código</span>
             <input
@@ -153,18 +185,19 @@ export function PairingPanel({
               value={inviteCode}
             />
           </label>
-        ) : null}
+          ) : null}
 
-        {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
+          {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
 
-        <button className="soft-button w-full" disabled={isSubmitting} type="submit">
-          {isSubmitting
-            ? "Guardando..."
-            : mode === "create"
-              ? "Crear sala"
-              : "Unirme a una sala"}
-        </button>
-      </form>
+          <button className="soft-button w-full" disabled={isSubmitting} type="submit">
+            {isSubmitting
+              ? "Guardando..."
+              : mode === "create"
+                ? "Crear sala"
+                : "Unirme a una sala"}
+          </button>
+        </form>
+      )}
     </section>
   );
 }

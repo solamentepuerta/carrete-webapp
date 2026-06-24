@@ -186,6 +186,9 @@ declare
   v_name text := nullif(btrim(coalesce(p_display_name, '')), '');
   v_timezone text := nullif(btrim(coalesce(p_timezone, '')), '');
   v_couple_id uuid;
+  v_existing_couple_id uuid;
+  v_existing_code text;
+  v_existing_count int := 0;
 begin
   if auth.uid() is null then
     raise exception 'debes iniciar sesion';
@@ -197,6 +200,35 @@ begin
 
   if v_timezone is null then
     v_timezone := 'UTC';
+  end if;
+
+  select p.couple_id,
+         c.invite_code,
+         coalesce(member_counts.member_count, 0)::int
+  into v_existing_couple_id,
+       v_existing_code,
+       v_existing_count
+  from profiles p
+  left join couples c on c.id = p.couple_id
+  left join lateral (
+    select count(*)::int as member_count
+    from profiles p2
+    where p2.couple_id = p.couple_id
+  ) member_counts on true
+  where p.id = auth.uid();
+
+  if v_existing_couple_id is not null then
+    update profiles
+    set display_name = v_name,
+        timezone = v_timezone
+    where id = auth.uid();
+
+    return query
+    select v_existing_code::text as invite_code,
+           v_existing_couple_id::uuid as couple_id,
+           v_existing_count::int as member_count,
+           (v_existing_count >= 2) as is_paired;
+    return;
   end if;
 
   loop
@@ -250,7 +282,10 @@ declare
   v_name text := nullif(btrim(coalesce(p_display_name, '')), '');
   v_timezone text := nullif(btrim(coalesce(p_timezone, '')), '');
   v_couple_id uuid;
-  v_count int;
+  v_current_couple_id uuid;
+  v_current_count int := 0;
+  v_target_count int := 0;
+  v_count int := 0;
 begin
   if auth.uid() is null then
     raise exception 'debes iniciar sesion';
@@ -270,18 +305,52 @@ begin
 
   select c.id into v_couple_id
   from couples c
-  where c.invite_code = v_code;
+  where c.invite_code = v_code
+  for update;
 
   if v_couple_id is null then
     raise exception 'codigo invalido';
   end if;
 
-  select count(*)::int into v_count
+  select p.couple_id,
+         coalesce(member_counts.member_count, 0)::int
+  into v_current_couple_id,
+       v_current_count
   from profiles p
-  where p.couple_id = v_couple_id
-    and p.id <> auth.uid();
+  left join lateral (
+    select count(*)::int as member_count
+    from profiles p2
+    where p2.couple_id = p.couple_id
+  ) member_counts on true
+  where p.id = auth.uid();
 
-  if v_count >= 2 then
+  select count(*)::int into v_target_count
+  from profiles p
+  where p.couple_id = v_couple_id;
+
+  if v_current_couple_id = v_couple_id then
+    update profiles
+    set display_name = v_name,
+        timezone = v_timezone
+    where id = auth.uid();
+
+    if v_target_count < 2 then
+      raise exception 'esta es tu propia sala; entra con la cuenta de tu pareja para completarla';
+    end if;
+
+    return query
+    select v_code::text as invite_code,
+           v_couple_id::uuid as couple_id,
+           v_target_count::int as member_count,
+           true as is_paired;
+    return;
+  end if;
+
+  if v_current_couple_id is not null and v_current_count >= 2 then
+    raise exception 'ya tienes una sala activa';
+  end if;
+
+  if v_target_count >= 2 then
     raise exception 'este codigo ya esta completo';
   end if;
 
