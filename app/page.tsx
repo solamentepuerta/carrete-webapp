@@ -1,18 +1,22 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { CSSProperties } from "react";
 import { CelebrationBurst } from "@/components/CelebrationBurst";
+import {
+  HomeCarrete,
+  type OwnBoardCard,
+  type PartnerEntry,
+  type PartnerResult
+} from "@/components/HomeCarrete";
+import { PairingPanel } from "@/components/PairingPanel";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { categories, type Category } from "@/lib/categories";
+import { categories } from "@/lib/categories";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 const navItems = [
-  { href: "/subir", label: "Subir" },
-  { href: "/adivinar", label: "Adivinar" },
   { href: "/calendario", label: "Calendario" },
   { href: "/ajustes", label: "Ajustes" }
 ];
@@ -31,10 +35,32 @@ type DayStatus = {
   partner_uploads: number;
 };
 
-type BoardCard = {
-  category: Category;
-  imageSrc: string;
-  isUploaded: boolean;
+type ProfileRow = {
+  couple_id: string | null;
+  display_name: string;
+  id: string;
+  timezone: string;
+};
+
+type PairingStatus = {
+  couple_id: string | null;
+  invite_code: string | null;
+  is_paired: boolean;
+  member_count: number;
+};
+
+type EntryToGuessRow = {
+  already_guessed: boolean;
+  entry_id: string;
+  guessed_category_id: number | null;
+  image_path: string;
+};
+
+type DayResultRow = {
+  entry_id: string;
+  guessed_category_id: number;
+  is_correct: boolean;
+  real_category_id: number;
 };
 
 const emptyStatus: DayStatus = {
@@ -59,13 +85,18 @@ function getDateForTimezone(timezone: string) {
 export default async function HomePage() {
   let celebrationKey = "sin-fecha";
   let dayComplete = false;
+  let logicalDate = "";
+  let pairingStatus: PairingStatus | null = null;
+  let profile: ProfileRow | null = null;
   let streak = 0;
   let dayStatus = emptyStatus;
-  let boardCards: BoardCard[] = categories.map((category) => ({
+  let ownCards: OwnBoardCard[] = categories.map((category) => ({
     category,
     imageSrc: category.imageSrc,
     isUploaded: false
   }));
+  let partnerEntries: PartnerEntry[] = [];
+  let initialResults: PartnerResult[] = [];
 
   if (hasSupabaseEnv()) {
     const supabase = await createClient();
@@ -77,61 +108,104 @@ export default async function HomePage() {
       redirect("/login");
     }
 
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from("profiles")
-      .select("id,timezone")
+      .select("id,couple_id,display_name,timezone")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile) {
-      redirect("/login");
-    }
+    profile = (profileData as ProfileRow | null) ?? null;
 
-    const today = getDateForTimezone(profile.timezone || "UTC");
-    const [{ data: entries }, { data: status }, { data: streakData }] =
-      await Promise.all([
+    const { data: pairingData } = await supabase
+      .rpc("get_pairing_status")
+      .maybeSingle();
+    pairingStatus = (pairingData as PairingStatus | null) ?? null;
+
+    if (profile?.couple_id && pairingStatus?.is_paired) {
+      const today = getDateForTimezone(profile.timezone || "UTC");
+      logicalDate = today;
+      const [
+        { data: entries },
+        { data: status },
+        { data: streakData },
+        { data: entriesToGuess }
+      ] = await Promise.all([
         supabase
           .from("entries")
           .select("id,category_id,image_path,caption")
           .eq("author_id", user.id)
           .eq("entry_date", today),
         supabase.rpc("get_day_status", { p_date: today }).maybeSingle(),
-        supabase.rpc("get_streak").single()
+        supabase.rpc("get_streak").single(),
+        supabase.rpc("get_entries_to_guess", { p_date: today })
       ]);
-    const ownEntries = (entries ?? []) as EntryRow[];
-    const signedUrls = new Map<string, string>();
+      const ownEntries = (entries ?? []) as EntryRow[];
+      const signedUrls = new Map<string, string>();
 
-    await Promise.all(
-      ownEntries.map(async (entry) => {
-        const { data } = await supabase.storage
-          .from("photos")
-          .createSignedUrl(entry.image_path, 60 * 60);
+      await Promise.all(
+        ownEntries.map(async (entry) => {
+          const { data } = await supabase.storage
+            .from("photos")
+            .createSignedUrl(entry.image_path, 60 * 60);
 
-        if (data?.signedUrl) {
-          signedUrls.set(entry.image_path, data.signedUrl);
-        }
-      })
-    );
+          if (data?.signedUrl) {
+            signedUrls.set(entry.image_path, data.signedUrl);
+          }
+        })
+      );
 
-    dayStatus = (status as DayStatus | null) ?? emptyStatus;
-    streak = Number(streakData ?? 0);
-    celebrationKey = today;
-    dayComplete =
-      dayStatus.my_uploads === 5 &&
-      dayStatus.partner_uploads === 5 &&
-      dayStatus.my_guesses === 5 &&
-      dayStatus.partner_guesses === 5;
-    boardCards = categories.map((category) => {
-      const entry = ownEntries.find((item) => item.category_id === category.id);
+      dayStatus = (status as DayStatus | null) ?? emptyStatus;
+      streak = Number(streakData ?? 0);
+      celebrationKey = today;
+      dayComplete =
+        dayStatus.my_uploads === 5 &&
+        dayStatus.partner_uploads === 5 &&
+        dayStatus.my_guesses === 5 &&
+        dayStatus.partner_guesses === 5;
+      ownCards = categories.map((category) => {
+        const entry = ownEntries.find((item) => item.category_id === category.id);
 
-      return {
-        category,
-        imageSrc: entry
-          ? signedUrls.get(entry.image_path) ?? category.imageSrc
-          : category.imageSrc,
-        isUploaded: Boolean(entry)
-      };
-    });
+        return {
+          category,
+          imageSrc: entry
+            ? signedUrls.get(entry.image_path) ?? category.imageSrc
+            : category.imageSrc,
+          isUploaded: Boolean(entry)
+        };
+      });
+
+      const partnerRows = (entriesToGuess ?? []) as EntryToGuessRow[];
+      partnerEntries = await Promise.all(
+        partnerRows.map(async (entry) => {
+          const { data: signed } = await supabase.storage
+            .from("photos")
+            .createSignedUrl(entry.image_path, 60 * 60);
+
+          return {
+            already_guessed: entry.already_guessed,
+            entry_id: entry.entry_id,
+            guessed_category_id: entry.guessed_category_id,
+            image_url: signed?.signedUrl ?? ""
+          };
+        })
+      );
+
+      if (
+        partnerEntries.length === 5 &&
+        partnerEntries.every((entry) => entry.already_guessed)
+      ) {
+        const { data: results } = await supabase.rpc("get_day_results", {
+          p_date: today
+        });
+
+        initialResults = ((results ?? []) as DayResultRow[]).map((result) => ({
+          entry_id: result.entry_id,
+          guessed_category_id: result.guessed_category_id,
+          is_correct: result.is_correct,
+          real_category_id: result.real_category_id
+        }));
+      }
+    }
   }
 
   return (
@@ -173,36 +247,21 @@ export default async function HomePage() {
           enabled={dayComplete}
         />
 
-        <section className="window-shell p-3">
-          <div className="corkboard grid grid-cols-2 gap-3 rounded-2xl p-3">
-            {boardCards.map((card, index) => (
-              <article
-                className="polaroid aspect-[3/4] rotate-[var(--rotate)] p-2"
-                key={card.category.key}
-                style={
-                  {
-                    "--rotate": `${[-3, 2, -1, 4, -4][index]}deg`
-                  } as CSSProperties
-                }
-              >
-                <div
-                  className={`polaroid-photo relative h-full overflow-hidden rounded-xl ${
-                    card.isUploaded ? "polaroid-photo-real" : ""
-                  }`}
-                  style={{ backgroundImage: `url(${card.imageSrc})` }}
-                >
-                  <span className="washi-tape" aria-hidden="true" />
-                  <span className="corner-sparkle" aria-hidden="true">
-                    ✧
-                  </span>
-                  <p className="category-card-label px-3 text-center text-base font-bold leading-snug">
-                    {card.category.label}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        {profile?.couple_id && pairingStatus?.is_paired ? (
+          <HomeCarrete
+            initialOwnCards={ownCards}
+            initialPartnerEntries={partnerEntries}
+            initialResults={initialResults}
+            logicalDate={logicalDate}
+            profile={{
+              couple_id: profile.couple_id,
+              id: profile.id,
+              timezone: profile.timezone
+            }}
+          />
+        ) : (
+          <PairingPanel initialStatus={pairingStatus} />
+        )}
 
         <section className="grid grid-cols-2 gap-3">
           <StatusCard

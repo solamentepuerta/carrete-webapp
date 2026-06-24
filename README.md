@@ -36,7 +36,7 @@ La app no usa zona horaria global. Cada perfil guarda `profiles.timezone`, y las
 
 ## Fase 2
 
-Esta fase implementa el acceso MVP:
+Esta fase implemento el acceso MVP original:
 
 - `/login` entra con nombre y código compartido de pareja.
 - El cliente crea una sesión anónima de Supabase cuando todavía no hay usuario.
@@ -47,6 +47,8 @@ Esta fase implementa el acceso MVP:
 1. En Supabase Auth, activa **Anonymous sign-ins**.
 2. Ejecuta `supabase/migrations/202606230001_phase_2_access.sql` en el SQL editor si ya habías corrido Fase 1.
 3. Si estás creando el proyecto desde cero, puedes ejecutar `supabase/schema.sql` completo.
+
+La app actual ya no usa Anonymous sign-ins para entrar. Usa email/password y conserva `join_couple` solo por compatibilidad con instalaciones anteriores.
 
 ## Fase 3
 
@@ -102,6 +104,20 @@ Esta fase añade pulido de experiencia:
 - Score visible después del flip de adivinanzas.
 - Micro-interacciones y estados vacíos más cálidos.
 
+## Flujo actual
+
+- `/login` usa correo y contraseña con Supabase Auth.
+- `/` es la experiencia principal: alterna entre **Mi carrete** y **Su carrete**.
+- **Mi carrete** sube o reemplaza fotos tocando cada polaroid.
+- **Su carrete** permite asignar pistas en borrador, desmarcar con presión larga y revelar al tener 5 pistas.
+- El juego se bloquea hasta emparejarse con un código generado desde la app.
+
+### Actualizar Supabase para el flujo actual
+
+1. En Supabase Auth, activa el provider **Email**.
+2. Ejecuta `supabase/migrations/202606240004_email_pairing_and_entry_upsert.sql`.
+3. Anonymous sign-ins ya no es necesario para usuarios nuevos.
+
 ## Comandos
 
 ```bash
@@ -134,5 +150,5 @@ En Supabase, antes de probar el flujo completo:
 
 1. Ejecuta `supabase/schema.sql` completo si el proyecto esta vacio.
 2. Si ya habias corrido una fase anterior, ejecuta las migraciones pendientes en orden.
-3. Activa **Authentication > Sign In / Providers > Anonymous sign-ins**.
+3. Activa **Authentication > Sign In / Providers > Email**.
 4. Confirma que el bucket privado `photos` existe.

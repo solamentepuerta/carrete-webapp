@@ -199,6 +199,7 @@ button {
     transform 160ms ease,
     box-shadow 160ms ease,
     background-color 160ms ease;
+  isolation: isolate;
 }
 
 .theme-toggle:active {
@@ -316,6 +317,11 @@ button {
   color: var(--theme-ink);
 }
 
+.polaroid-photo-image {
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .polaroid-photo-real {
   background-position: center;
   background-repeat: no-repeat;
@@ -386,6 +392,150 @@ button {
   opacity: 0.56;
 }
 
+.home-carrete {
+  display: grid;
+  gap: 1rem;
+}
+
+.carrete-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-window);
+  padding: 0.28rem;
+  box-shadow: 0 7px 0 rgb(51 47 63 / 0.12);
+}
+
+.carrete-switch-thumb {
+  position: absolute;
+  inset: 0.28rem auto 0.28rem 0.28rem;
+  z-index: 0;
+  width: calc(50% - 0.28rem);
+  border-radius: 0.72rem;
+  background: var(--theme-lavender);
+}
+
+.carrete-switch-button {
+  position: relative;
+  z-index: 1;
+  min-height: 2.8rem;
+  border: 0;
+  background: transparent;
+  color: var(--theme-ink);
+  font-weight: 900;
+}
+
+.polaroid-button {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: inherit;
+}
+
+.hidden-file-input {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.guess-polaroid-home {
+  min-height: auto;
+  perspective: 1000px;
+}
+
+.guess-polaroid-home .card3d {
+  min-height: 100%;
+}
+
+.guess-polaroid-home .card-face {
+  padding: 0;
+}
+
+.guess-popover {
+  position: absolute;
+  right: -0.25rem;
+  bottom: 0.75rem;
+  left: -0.25rem;
+  z-index: 6;
+  display: grid;
+  gap: 0.35rem;
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-window);
+  padding: 0.55rem;
+  box-shadow: var(--shadow-kawaii);
+}
+
+.guess-popover button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 2px solid var(--theme-line);
+  border-radius: 0.7rem;
+  background: var(--theme-lilac-soft);
+  padding: 0.45rem 0.55rem;
+  color: var(--theme-ink);
+  font-size: 0.76rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.guess-popover button:disabled {
+  opacity: 0.38;
+}
+
+.hold-progress {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  height: 3.3rem;
+  width: 3.3rem;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, var(--theme-window) 56%, transparent 58%),
+    conic-gradient(var(--theme-blush-deep) var(--hold-progress), rgb(255 255 255 / 0.22) 0);
+  box-shadow: 0 0 0 3px var(--theme-line);
+}
+
+.pairing-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.35rem;
+  text-align: center;
+}
+
+.pairing-code-card {
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-lilac-soft);
+  padding: 1rem;
+  box-shadow: 6px 6px 0 rgb(51 47 63 / 0.12);
+}
+
+.pairing-code-card span {
+  display: block;
+  color: var(--theme-muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pairing-code-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 2.1rem;
+  letter-spacing: 0.12em;
+}
+
 .status-violet {
   background: var(--theme-lilac-soft);
 }
@@ -406,6 +556,29 @@ button {
   display: grid;
   gap: 1rem;
   margin-top: 1.5rem;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-cream);
+  padding: 0.35rem;
+}
+
+.auth-tab {
+  border: 0;
+  border-radius: 0.7rem;
+  background: transparent;
+  padding: 0.75rem 0.5rem;
+  color: var(--theme-ink);
+  font-weight: 900;
+}
+
+.auth-tab[aria-selected="true"] {
+  background: var(--theme-lavender);
 }
 
 .auth-field {
@@ -434,6 +607,16 @@ button {
   border: 3px solid var(--theme-line);
   border-radius: 1rem;
   background: var(--theme-blush);
+  padding: 0.75rem 1rem;
+  color: var(--theme-ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.auth-success {
+  border: 3px solid var(--theme-line);
+  border-radius: 1rem;
+  background: var(--theme-sage);
   padding: 0.75rem 1rem;
   color: var(--theme-ink);
   font-size: 0.9rem;

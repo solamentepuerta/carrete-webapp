@@ -176,7 +176,7 @@ export function UploadForm({ profile }: { profile: ProfileForUpload }) {
                   style={
                     upload.previewUrl
                       ? { backgroundImage: `url(${upload.previewUrl})` }
-                      : undefined
+                      : { backgroundImage: `url(${category.imageSrc})` }
                   }
                 >
                   {upload.previewUrl ? (
@@ -186,9 +186,7 @@ export function UploadForm({ profile }: { profile: ProfileForUpload }) {
                       initial={{ filter: "brightness(0.25) saturate(0)" }}
                       transition={{ duration: 2.5, ease: "easeOut" }}
                     />
-                  ) : (
-                    <span className="upload-empty">{category.emoji}</span>
-                  )}
+                  ) : null}
                 </div>
 
                 <p className="upload-label">{category.label}</p>
